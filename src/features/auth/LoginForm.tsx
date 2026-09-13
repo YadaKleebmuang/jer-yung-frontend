@@ -14,6 +14,10 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { ApiError } from "@/services/api-client";
 import { login } from "@/services/auth.service";
+import {
+  AUTH_ROLE_STORAGE_KEY,
+  getLandingPathForRole,
+} from "@/lib/auth-session";
 
 const REMEMBERED_EMAIL_KEY =
   "jeryung-remembered-email";
@@ -38,10 +42,19 @@ export function LoginForm() {
     try {
       const normalizedEmail = email.trim();
 
-      await login({
+      window.localStorage.removeItem(
+        AUTH_ROLE_STORAGE_KEY,
+      );
+
+      const response = await login({
         userEmail: normalizedEmail,
         userPassword: password,
       });
+
+      window.localStorage.setItem(
+        AUTH_ROLE_STORAGE_KEY,
+        response.content.userRole,
+      );
 
       if (rememberMe) {
         window.localStorage.setItem(
@@ -54,7 +67,11 @@ export function LoginForm() {
         );
       }
 
-      router.push("/dashboard");
+      router.push(
+        getLandingPathForRole(
+          response.content.userRole,
+        ),
+      );
       router.refresh();
     } catch (err) {
       if (err instanceof ApiError) {

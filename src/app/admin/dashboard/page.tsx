@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   FolderCog,
@@ -5,14 +7,103 @@ import {
   PackageSearch,
   Warehouse,
 } from "lucide-react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import { PageContainer } from "@/components/layout/PageContainer";
+import {
+  getAdminDashboardStats,
+  getAdminDashboardWeekly,
+  type AdminDashboardStats,
+  type AdminDashboardWeeklyItem,
+} from "@/services/admin-dashboard.service";
+import { ApiError } from "@/services/api-client";
+
+function formatDay(value: string) {
+  return new Intl.DateTimeFormat("th-TH", {
+    weekday: "short",
+  }).format(new Date(`${value}T00:00:00`));
+}
 
 export default function AdminDashboardPage() {
+  const [stats, setStats] =
+    useState<AdminDashboardStats | null>(
+      null,
+    );
+
+  const [weekly, setWeekly] = useState<
+    AdminDashboardWeeklyItem[]
+  >([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [errorMessage, setErrorMessage] =
+    useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadDashboard() {
+      try {
+        const [
+          statsResponse,
+          weeklyResponse,
+        ] = await Promise.all([
+          getAdminDashboardStats(),
+          getAdminDashboardWeekly(),
+        ]);
+
+        if (cancelled) {
+          return;
+        }
+
+        setStats(statsResponse.content);
+        setWeekly(weeklyResponse.content);
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+
+        if (
+          error instanceof ApiError &&
+          error.status === 403
+        ) {
+          setErrorMessage(
+            "บัญชีนี้ไม่มีสิทธิ์เข้าถึงข้อมูลสำหรับผู้ดูแลระบบ",
+          );
+        } else {
+          setErrorMessage(
+            "ไม่สามารถโหลดข้อมูล Dashboard ได้",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadDashboard();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const maxWeeklyCount = Math.max(
+    1,
+    ...weekly.flatMap((item) => [
+      item.lost_count,
+      item.found_count,
+    ]),
+  );
+
   return (
     <div className="py-8">
       <PageContainer>
-        {/* Header */}
         <section>
           <h1 className="text-3xl font-bold text-foreground">
             แผงควบคุมผู้ดูแลระบบ
@@ -23,9 +114,13 @@ export default function AdminDashboardPage() {
           </p>
         </section>
 
-        {/* Main overview */}
+        {errorMessage && (
+          <div className="mt-6 rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+            {errorMessage}
+          </div>
+        )}
+
         <section className="mt-8 grid gap-6 xl:grid-cols-[1.45fr_0.55fr]">
-          {/* Weekly statistics */}
           <article className="rounded-2xl bg-surface p-6">
             <div>
               <h2 className="text-xl font-bold text-foreground">
@@ -37,8 +132,69 @@ export default function AdminDashboardPage() {
               </p>
             </div>
 
-            <div className="mt-6 flex min-h-[360px] flex-col">
-              <div className="flex flex-1 items-center justify-center rounded-xl bg-surface-muted/35">
+            {loading ? (
+              <div className="mt-6 flex min-h-[360px] items-center justify-center rounded-xl bg-surface-muted/40">
+                <p className="text-sm text-text-secondary">
+                  กำลังโหลดข้อมูล...
+                </p>
+              </div>
+            ) : weekly.length > 0 ? (
+              <div className="mt-8">
+                <div className="flex h-72 items-end gap-4 border-b border-border px-2">
+                  {weekly.map((item) => (
+                    <div
+                      key={item.day}
+                      className="flex min-w-0 flex-1 flex-col items-center"
+                    >
+                      <div className="flex h-56 w-full items-end justify-center gap-1.5">
+                        <div
+                          title={`ของหาย ${item.lost_count}`}
+                          className="w-5 rounded-t bg-brand-purple"
+                          style={{
+                            height: `${Math.max(
+                              6,
+                              (item.lost_count /
+                                maxWeeklyCount) *
+                                100,
+                            )}%`,
+                          }}
+                        />
+
+                        <div
+                          title={`พบเจอ ${item.found_count}`}
+                          className="w-5 rounded-t bg-brand-yellow"
+                          style={{
+                            height: `${Math.max(
+                              6,
+                              (item.found_count /
+                                maxWeeklyCount) *
+                                100,
+                            )}%`,
+                          }}
+                        />
+                      </div>
+
+                      <span className="mt-3 text-xs text-text-secondary">
+                        {formatDay(item.day)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-5 flex flex-wrap items-center gap-5 text-xs text-text-secondary">
+                  <span className="inline-flex items-center gap-2">
+                    <span className="size-2.5 rounded-full bg-brand-purple" />
+                    ของหาย
+                  </span>
+
+                  <span className="inline-flex items-center gap-2">
+                    <span className="size-2.5 rounded-full bg-brand-yellow" />
+                    พบเจอ
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-6 flex min-h-[360px] items-center justify-center rounded-xl bg-surface-muted/35">
                 <div className="text-center">
                   <PackageSearch
                     className="mx-auto size-12 text-brand-purple/35"
@@ -46,30 +202,13 @@ export default function AdminDashboardPage() {
                   />
 
                   <p className="mt-3 text-sm font-semibold text-foreground">
-                    รอข้อมูลสถิติจากระบบ
-                  </p>
-
-                  <p className="mt-1 text-xs text-text-secondary">
-                    กราฟจะแสดงเมื่อเชื่อม Dashboard API
+                    ยังไม่มีข้อมูลสถิติ
                   </p>
                 </div>
               </div>
-
-              <div className="mt-4 flex flex-wrap items-center gap-5 border-t border-border pt-4 text-xs text-text-secondary">
-                <span className="inline-flex items-center gap-2">
-                  <span className="size-2.5 rounded-full bg-brand-purple" />
-                  ของหาย
-                </span>
-
-                <span className="inline-flex items-center gap-2">
-                  <span className="size-2.5 rounded-full bg-brand-yellow" />
-                  พบเจอ
-                </span>
-              </div>
-            </div>
+            )}
           </article>
 
-          {/* Management */}
           <aside className="rounded-2xl bg-surface p-6">
             <h2 className="text-xl font-bold text-foreground">
               จัดการระบบ
@@ -85,10 +224,7 @@ export default function AdminDashboardPage() {
                 className="flex items-center gap-4 rounded-xl border border-border p-4 transition-colors hover:bg-surface-muted"
               >
                 <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-brand-purple/10">
-                  <Warehouse
-                    className="size-6 text-brand-purple"
-                    aria-hidden="true"
-                  />
+                  <Warehouse className="size-6 text-brand-purple" />
                 </div>
 
                 <div>
@@ -106,10 +242,7 @@ export default function AdminDashboardPage() {
                 className="flex items-center gap-4 rounded-xl border border-border p-4 transition-colors hover:bg-surface-muted"
               >
                 <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-brand-yellow/25">
-                  <FolderCog
-                    className="size-6 text-foreground"
-                    aria-hidden="true"
-                  />
+                  <FolderCog className="size-6 text-foreground" />
                 </div>
 
                 <div>
@@ -127,10 +260,7 @@ export default function AdminDashboardPage() {
                 className="flex items-center gap-4 rounded-xl border border-border p-4 transition-colors hover:bg-surface-muted"
               >
                 <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-green-50">
-                  <MapPin
-                    className="size-6 text-green-600"
-                    aria-hidden="true"
-                  />
+                  <MapPin className="size-6 text-green-600" />
                 </div>
 
                 <div>
@@ -146,7 +276,6 @@ export default function AdminDashboardPage() {
           </aside>
         </section>
 
-        {/* System settings */}
         <section className="mt-6 rounded-2xl bg-surface p-6">
           <div>
             <h2 className="text-xl font-bold text-foreground">
@@ -159,26 +288,16 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="mt-6 grid gap-6 lg:grid-cols-2">
-            {/* Categories */}
             <div className="rounded-xl border border-border p-5">
               <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-10 items-center justify-center rounded-lg bg-brand-yellow/25">
-                    <FolderCog
-                      className="size-5 text-foreground"
-                      aria-hidden="true"
-                    />
-                  </div>
+                <div>
+                  <h3 className="font-bold text-foreground">
+                    หมวดหมู่สิ่งของ
+                  </h3>
 
-                  <div>
-                    <h3 className="font-bold text-foreground">
-                      หมวดหมู่สิ่งของ
-                    </h3>
-
-                    <p className="mt-0.5 text-xs text-text-secondary">
-                      หมวดหมู่ที่ใช้จำแนกสิ่งของ
-                    </p>
-                  </div>
+                  <p className="mt-1 text-xs text-text-secondary">
+                    จัดการหมวดหมู่ที่ใช้จำแนกสิ่งของ
+                  </p>
                 </div>
 
                 <Link
@@ -189,33 +308,23 @@ export default function AdminDashboardPage() {
                 </Link>
               </div>
 
-              <div className="mt-5 rounded-lg bg-surface-muted px-4 py-5 text-center">
+              <div className="mt-5 rounded-lg bg-surface-muted p-4">
                 <p className="text-sm text-text-secondary">
-                  รอข้อมูลหมวดหมู่จาก Backend
+                  รอ API รายการหมวดหมู่จาก Backend
                 </p>
               </div>
             </div>
 
-            {/* Locations */}
             <div className="rounded-xl border border-border p-5">
               <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-10 items-center justify-center rounded-lg bg-green-50">
-                    <MapPin
-                      className="size-5 text-green-600"
-                      aria-hidden="true"
-                    />
-                  </div>
+                <div>
+                  <h3 className="font-bold text-foreground">
+                    จุดรับฝากกลาง / สถานที่
+                  </h3>
 
-                  <div>
-                    <h3 className="font-bold text-foreground">
-                      จุดรับฝากกลาง / สถานที่
-                    </h3>
-
-                    <p className="mt-0.5 text-xs text-text-secondary">
-                      สถานที่ที่ใช้ในระบบ
-                    </p>
-                  </div>
+                  <p className="mt-1 text-xs text-text-secondary">
+                    จัดการสถานที่ที่ใช้ในระบบ
+                  </p>
                 </div>
 
                 <Link
@@ -226,13 +335,37 @@ export default function AdminDashboardPage() {
                 </Link>
               </div>
 
-              <div className="mt-5 rounded-lg bg-surface-muted px-4 py-5 text-center">
+              <div className="mt-5 rounded-lg bg-surface-muted p-4">
                 <p className="text-sm text-text-secondary">
-                  รอข้อมูลสถานที่จาก Backend
+                  รอ API รายการสถานที่จาก Backend
                 </p>
               </div>
             </div>
           </div>
+        </section>
+
+        <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            ["กำลังตามหา", stats?.pendingCount],
+            ["อยู่คลังกลาง", stats?.inCenterCount],
+            ["พบของแล้ว", stats?.foundedCount],
+            ["รายการทั้งหมด", stats?.totalCount],
+          ].map(([label, value]) => (
+            <div
+              key={String(label)}
+              className="rounded-xl bg-surface p-4"
+            >
+              <p className="text-xs text-text-secondary">
+                {label}
+              </p>
+
+              <p className="mt-1 text-xl font-bold text-foreground">
+                {loading
+                  ? "…"
+                  : value ?? "—"}
+              </p>
+            </div>
+          ))}
         </section>
       </PageContainer>
     </div>

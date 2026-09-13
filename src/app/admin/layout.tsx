@@ -1,8 +1,6 @@
 import { type ReactNode } from "react";
 
-import { AppShell } from "@/components/layout/AppShell";
-import { JerYungHeader } from "@/components/layout/JerYungHeader";
-import { JerYungSidebar } from "@/components/layout/JerYungSidebar";
+import { AdminAccessShell } from "@/components/layout/AdminAccessShell";
 
 export interface AdminLayoutProps {
   children: ReactNode;
@@ -12,13 +10,8 @@ export default function AdminLayout({
   children,
 }: AdminLayoutProps) {
   return (
-    <AppShell
-      sidebar={
-        <JerYungSidebar role="admin" />
-      }
-      header={<JerYungHeader />}
-    >
+    <AdminAccessShell>
       {children}
-    </AppShell>
+    </AdminAccessShell>
   );
 }
