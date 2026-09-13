@@ -16,7 +16,7 @@ export function JerYungHeader({
         className,
       )}
     >
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-sm">
         <Input
           type="search"
           name="search"
