@@ -2,6 +2,7 @@ import {
   ArrowRight,
   type LucideIcon,
 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 
 type QuickActionVariant = "lost" | "found";
@@ -11,6 +12,7 @@ export interface QuickActionCardProps {
   description: string;
   icon: LucideIcon;
   variant: QuickActionVariant;
+  onClick?: () => void;
 }
 
 export function QuickActionCard({
@@ -18,13 +20,17 @@ export function QuickActionCard({
   description,
   icon: Icon,
   variant,
+  onClick,
 }: QuickActionCardProps) {
   const isLost = variant === "lost";
 
   return (
-    <div
+    <button
+      type="button"
+      onClick={onClick}
       className={cn(
-        "flex min-h-60 flex-col rounded-xl p-7",
+        "flex min-h-60 w-full flex-col rounded-xl p-7 text-left transition-transform",
+        "hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-purple focus-visible:ring-offset-2",
         isLost
           ? "bg-brand-purple text-white"
           : "bg-brand-yellow text-foreground",
@@ -63,6 +69,6 @@ export function QuickActionCard({
           aria-hidden="true"
         />
       </span>
-    </div>
+    </button>
   );
 }

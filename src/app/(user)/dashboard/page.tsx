@@ -1,15 +1,10 @@
-import {
-  AlertTriangle,
-  Package,
-} from "lucide-react";
-
 export const dynamic = "force-dynamic";
 
 import { PageContainer } from "@/components/layout/PageContainer";
 import { DashboardFilterBar } from "@/features/dashboard/DashboardFilterBar";
 import { DashboardStats } from "@/features/dashboard/DashboardStats";
 import { LatestItemsTabs } from "@/features/dashboard/LatestItemsTabs";
-import { QuickActionCard } from "@/features/dashboard/QuickActionCard";
+import { DashboardQuickActions } from "@/features/dashboard/DashboardQuickActions";
 import {
   getLatestFoundItems,
   getLatestLostItems,
@@ -82,19 +77,7 @@ export default async function DashboardPage({
         </section>
 
         <section className="mt-8 grid gap-5 lg:grid-cols-[1fr_1fr_0.9fr]">
-          <QuickActionCard
-            title="แจ้งของหาย"
-            description="ลงทะเบียนสิ่งของที่คุณทำหาย เพื่อให้ผู้อื่นช่วยตามหา"
-            icon={AlertTriangle}
-            variant="lost"
-          />
-
-          <QuickActionCard
-            title="แจ้งพบของ"
-            description="รายงานสิ่งของที่คุณพบเห็น เพื่อส่งคืนเจ้าของ"
-            icon={Package}
-            variant="found"
-          />
+          <DashboardQuickActions />
 
           <DashboardStats
             lost={latestLostResponse.content.totalElements}

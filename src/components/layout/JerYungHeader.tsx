@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Bell, CircleUserRound, Search } from "lucide-react";
 
 import { Input } from "@/components/ui/Input";
@@ -60,8 +61,8 @@ export function JerYungHeader({
           />
         </button>
 
-        <button
-          type="button"
+        <Link
+          href="/profile"
           className={cn(
             "inline-flex size-10 items-center justify-center rounded-lg",
             "text-text-secondary transition-colors",
@@ -74,7 +75,7 @@ export function JerYungHeader({
             className="size-5"
             aria-hidden="true"
           />
-        </button>
+        </Link>
       </div>
     </div>
   );
