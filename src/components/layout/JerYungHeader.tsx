@@ -1,4 +1,5 @@
 import { Bell, CircleUserRound, Search } from "lucide-react";
+
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
 
@@ -16,10 +17,14 @@ export function JerYungHeader({
         className,
       )}
     >
-      <div className="w-full max-w-sm">
+      <form
+        action="/items"
+        method="get"
+        className="w-full max-w-sm"
+      >
         <Input
           type="search"
-          name="search"
+          name="q"
           aria-label="ค้นหาสิ่งของ"
           placeholder="ค้นหาสิ่งของ..."
           startIcon={
@@ -29,7 +34,14 @@ export function JerYungHeader({
             />
           }
         />
-      </div>
+
+        <button
+          type="submit"
+          className="sr-only"
+        >
+          ค้นหา
+        </button>
+      </form>
 
       <div className="ml-auto flex items-center gap-2">
         <button
