@@ -1,26 +1,74 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+
+  /* Brand */
+  --brand-purple: #470873;
+  --brand-purple-hover: #3b065f;
+  --brand-purple-soft: #ddb7fa;
+
+  --brand-yellow: #f6d648;
+  --brand-yellow-hover: #e8c936;
+
+  /* Surfaces */
+  --background: #f7f8fa;
+  --surface: #ffffff;
+  --surface-muted: #f3f4f6;
+
+  /* Text */
+  --foreground: #1f1f1f;
+  --text-secondary: #6b7280;
+  --text-disabled: #9ca3af;
+
+  /* Border */
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
+
+  /* Semantic */
+  --success: #65cb8f;
+  --warning: #f6d648;
+  --danger: #ea3323;
+  --info: #4597f8;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  --color-brand-purple: var(--brand-purple);
+  --color-brand-purple-hover: var(--brand-purple-hover);
+  --color-brand-purple-soft: var(--brand-purple-soft);
+
+  --color-brand-yellow: var(--brand-yellow);
+  --color-brand-yellow-hover: var(--brand-yellow-hover);
+
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+
+  --color-text-secondary: var(--text-secondary);
+  --color-text-disabled: var(--text-disabled);
+
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  min-height: 100%;
 }
 
 body {
+  margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
