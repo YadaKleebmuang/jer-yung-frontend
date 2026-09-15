@@ -1,6 +1,4 @@
-export type TransactionItemPostType =
-  | "LOST"
-  | "FOUND";
+export type TransactionItemPostType = "LOST" | "FOUND";
 
 export interface TransactionItemLocation {
   locationId: number;
@@ -30,19 +28,14 @@ export interface TransactionItemListItem {
   transactionItemsLocationDetails: string | null;
   transactionItemsDate: string;
   transactionItemsStorageType: string;
-  currentStatus?:
-    | "PENDING"
-    | "FOUNDED"
-    | "IN_CENTER"
-    | "RETURNED";
+  currentStatus?: "PENDING" | "FOUNDED" | "IN_CENTER" | "RETURNED";
   location: TransactionItemLocation | null;
   categories: TransactionItemCategory | null;
   users: TransactionItemUser | null;
+  receiverName?: string | null;
 }
 
-export type TransactionItemStorageType =
-  | "SELF"
-  | "CENTRAL";
+export type TransactionItemStorageType = "SELF" | "CENTRAL";
 
 export interface CreateTransactionItemInput {
   locationId: number;

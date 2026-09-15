@@ -2,21 +2,21 @@ import { ItemDetailView } from "@/features/items/ItemDetailView";
 
 export const dynamic = "force-dynamic";
 
-export interface ItemDetailPageProps {
+export interface AdminItemDetailPageProps {
   params: Promise<{
     id: string;
   }>;
 }
 
-export default async function ItemDetailPage({
+export default async function AdminItemDetailPage({
   params,
-}: ItemDetailPageProps) {
+}: AdminItemDetailPageProps) {
   const { id } = await params;
 
   return (
     <ItemDetailView
       id={id}
-      basePath="/items"
+      basePath="/admin/items"
     />
   );
 }

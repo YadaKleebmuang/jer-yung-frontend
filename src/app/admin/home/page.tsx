@@ -2,11 +2,11 @@ export const dynamic = "force-dynamic";
 
 import { DashboardView } from "@/features/dashboard/DashboardView";
 
-export default async function DashboardPage() {
+export default async function AdminHomePage() {
 
   return (
     <DashboardView
-      basePath="/items"
+      basePath="/admin/items"
     />
   );
 }

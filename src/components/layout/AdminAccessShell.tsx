@@ -136,7 +136,11 @@ export function AdminAccessShell({
           }
         />
       }
-      header={<JerYungHeader />}
+      header={
+        <JerYungHeader
+          profileHref="/admin/profile"
+        />
+      }
     >
       {children}
     </AppShell>

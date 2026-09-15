@@ -206,3 +206,11 @@ export function handoverToCentral(
     `/api/transaction-items/${itemId}/handover-to-central`,
   );
 }
+
+export function getPendingHandoverItems() {
+  return apiClient.get<
+    PaginatedApiResponse<TransactionItemListItem>
+  >(
+    "/api/transaction-items/pending-handover",
+  );
+}

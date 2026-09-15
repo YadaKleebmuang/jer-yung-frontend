@@ -12,23 +12,30 @@ type LatestItemsTab = "lost" | "found";
 export interface LatestItemsTabsProps {
   lostItems: TransactionItemListItem[];
   foundItems: TransactionItemListItem[];
+  basePath?: string;
+  searchQuery?: string;
 }
 
 export function LatestItemsTabs({
   lostItems,
   foundItems,
+  basePath = "/items",
+  searchQuery = "",
 }: LatestItemsTabsProps) {
   const [activeTab, setActiveTab] =
     useState<LatestItemsTab>("lost");
 
-  const items =
-    activeTab === "lost"
+  const isSearching = searchQuery.length > 0;
+  const items = isSearching
+    ? [...lostItems, ...foundItems]
+    : (activeTab === "lost"
       ? lostItems
-      : foundItems;
+      : foundItems);
 
   return (
     <section className="mt-6 rounded-2xl bg-surface p-6">
-      <div className="flex items-end gap-7 border-b border-border">
+      {!isSearching && (
+        <div className="flex items-end gap-7 border-b border-border">
         <button
           type="button"
           onClick={() => setActiveTab("lost")}
@@ -53,19 +60,24 @@ export function LatestItemsTabs({
           พบของล่าสุด
         </button>
       </div>
+      )}
 
       {items.length === 0 ? (
         <div className="py-8">
           <EmptyState
             title={
-              activeTab === "lost"
-                ? "ยังไม่มีรายการของหาย"
-                : "ยังไม่มีรายการพบของ"
+              isSearching
+                ? "ไม่พบรายการที่ตรงกับการค้นหา"
+                : (activeTab === "lost"
+                  ? "ยังไม่มีรายการของหาย"
+                  : "ยังไม่มีรายการพบของ")
             }
             description={
-              activeTab === "lost"
-                ? "เมื่อมีการแจ้งของหาย รายการล่าสุดจะแสดงที่นี่"
-                : "เมื่อมีการแจ้งพบของ รายการล่าสุดจะแสดงที่นี่"
+              isSearching
+                ? "ลองค้นหาด้วยคำอื่น"
+                : (activeTab === "lost"
+                  ? "เมื่อมีการแจ้งของหาย รายการล่าสุดจะแสดงที่นี่"
+                  : "เมื่อมีการแจ้งพบของ รายการล่าสุดจะแสดงที่นี่")
             }
           />
         </div>
@@ -75,23 +87,28 @@ export function LatestItemsTabs({
             <LatestItemCard
               key={item.transactionItemId}
               item={item}
+              basePath={basePath}
             />
           ))}
         </div>
       )}
 
-      <div className="mt-7 text-center">
-        <Link
-          href={
-            activeTab === "lost"
-              ? "/items?type=LOST"
-              : "/items?type=FOUND"
-          }
-          className="text-sm font-semibold text-brand-purple"
-        >
-          ดูทั้งหมด
-        </Link>
-      </div>
+
+
+      {!isSearching && (
+        <div className="mt-7 text-center">
+          <Link
+            href={
+              activeTab === "lost"
+                ? `${basePath}?type=LOST`
+                : `${basePath}?type=FOUND`
+            }
+            className="text-sm font-semibold text-brand-purple"
+          >
+            ดูทั้งหมด
+          </Link>
+        </div>
+      )}
     </section>
   );
 }

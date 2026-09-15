@@ -32,23 +32,15 @@ export function RegisterForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] =
-    useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(
-    event: React.FormEvent<HTMLFormElement>,
-  ) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
 
-    if (
-      !fullName.trim() ||
-      !email.trim() ||
-      !password ||
-      !confirmPassword
-    ) {
+    if (!fullName.trim() || !email.trim() || !password || !confirmPassword) {
       setError("กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน");
       return;
     }
@@ -58,13 +50,8 @@ export function RegisterForm() {
       return;
     }
 
-    if (
-      phoneNumber &&
-      !/^0\d{9}$/.test(phoneNumber)
-    ) {
-      setError(
-        "กรุณากรอกเบอร์โทรศัพท์เป็นตัวเลข 10 หลัก เช่น 0812345678",
-      );
+    if (phoneNumber && !/^0\d{9}$/.test(phoneNumber)) {
+      setError("กรุณากรอกเบอร์โทรศัพท์เป็นตัวเลข 10 หลัก เช่น 0812345678");
       return;
     }
 
@@ -75,10 +62,8 @@ export function RegisterForm() {
         userEmail: email.trim(),
         userPassword: password,
         userFullName: fullName.trim(),
-        userPhoneNumber:
-          phoneNumber || undefined,
-        userLineId:
-          lineId.trim() || undefined,
+        userPhoneNumber: phoneNumber || undefined,
+        userLineId: lineId.trim() || undefined,
       });
 
       router.push("/login");
@@ -87,9 +72,7 @@ export function RegisterForm() {
       if (err instanceof ApiError) {
         setError(err.message);
       } else {
-        setError(
-          "ไม่สามารถเชื่อมต่อระบบได้ กรุณาลองใหม่อีกครั้ง",
-        );
+        setError("ไม่สามารถเชื่อมต่อระบบได้ กรุณาลองใหม่อีกครั้ง");
       }
     } finally {
       setLoading(false);
@@ -97,10 +80,7 @@ export function RegisterForm() {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-5"
-    >
+    <form onSubmit={handleSubmit} className="space-y-5">
       {error ? (
         <div
           role="alert"
@@ -114,10 +94,7 @@ export function RegisterForm() {
         <section className="rounded-xl border border-border bg-surface p-6">
           <div className="mb-6 flex items-center gap-3">
             <span className="flex size-10 items-center justify-center rounded-lg bg-brand-purple-soft/45 text-brand-purple">
-              <UserPlus
-                className="size-5"
-                aria-hidden="true"
-              />
+              <UserPlus className="size-5" aria-hidden="true" />
             </span>
 
             <h3 className="text-xl font-bold text-foreground">
@@ -130,45 +107,25 @@ export function RegisterForm() {
               label="อีเมลมหาวิทยาลัย (@bru.ac.th)"
               type="email"
               value={email}
-              onChange={(event) =>
-                setEmail(event.target.value)
-              }
+              onChange={(event) => setEmail(event.target.value)}
               placeholder="student@bru.ac.th"
-              startIcon={
-                <Mail className="size-4" />
-              }
+              startIcon={<Mail className="size-4" />}
               autoComplete="email"
             />
 
             <Input
               label="รหัสผ่าน"
-              type={
-                showPassword
-                  ? "text"
-                  : "password"
-              }
+              type={showPassword ? "text" : "password"}
               value={password}
-              onChange={(event) =>
-                setPassword(event.target.value)
-              }
+              onChange={(event) => setPassword(event.target.value)}
               placeholder="กรอกรหัสผ่าน"
-              startIcon={
-                <LockKeyhole className="size-4" />
-              }
+              startIcon={<LockKeyhole className="size-4" />}
               endIcon={
                 <button
                   type="button"
-                  onClick={() =>
-                    setShowPassword(
-                      (current) => !current,
-                    )
-                  }
+                  onClick={() => setShowPassword((current) => !current)}
                   className="inline-flex size-7 items-center justify-center rounded-md text-text-secondary hover:text-brand-purple"
-                  aria-label={
-                    showPassword
-                      ? "ซ่อนรหัสผ่าน"
-                      : "แสดงรหัสผ่าน"
-                  }
+                  aria-label={showPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
                 >
                   {showPassword ? (
                     <EyeOff className="size-4" />
@@ -182,34 +139,18 @@ export function RegisterForm() {
 
             <Input
               label="ยืนยันรหัสผ่าน"
-              type={
-                showConfirmPassword
-                  ? "text"
-                  : "password"
-              }
+              type={showConfirmPassword ? "text" : "password"}
               value={confirmPassword}
-              onChange={(event) =>
-                setConfirmPassword(
-                  event.target.value,
-                )
-              }
+              onChange={(event) => setConfirmPassword(event.target.value)}
               placeholder="กรอกรหัสผ่านอีกครั้ง"
-              startIcon={
-                <LockKeyhole className="size-4" />
-              }
+              startIcon={<LockKeyhole className="size-4" />}
               endIcon={
                 <button
                   type="button"
-                  onClick={() =>
-                    setShowConfirmPassword(
-                      (current) => !current,
-                    )
-                  }
+                  onClick={() => setShowConfirmPassword((current) => !current)}
                   className="inline-flex size-7 items-center justify-center rounded-md text-text-secondary hover:text-brand-purple"
                   aria-label={
-                    showConfirmPassword
-                      ? "ซ่อนรหัสผ่าน"
-                      : "แสดงรหัสผ่าน"
+                    showConfirmPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"
                   }
                 >
                   {showConfirmPassword ? (
@@ -223,11 +164,7 @@ export function RegisterForm() {
             />
           </div>
 
-          <Button
-            type="submit"
-            className="mt-6 w-full"
-            loading={loading}
-          >
+          <Button type="submit" className="mt-6 w-full" loading={loading}>
             สมัครสมาชิก →
           </Button>
         </section>
@@ -235,28 +172,19 @@ export function RegisterForm() {
         <section className="rounded-xl border border-border bg-surface p-6">
           <div className="mb-6 flex items-center gap-3">
             <span className="flex size-10 items-center justify-center rounded-lg bg-brand-yellow/30 text-brand-yellow-hover">
-              <ContactRound
-                className="size-5"
-                aria-hidden="true"
-              />
+              <ContactRound className="size-5" aria-hidden="true" />
             </span>
 
-            <h3 className="text-xl font-bold text-foreground">
-              ข้อมูลส่วนตัว
-            </h3>
+            <h3 className="text-xl font-bold text-foreground">ข้อมูลส่วนตัว</h3>
           </div>
 
           <div className="space-y-4">
             <Input
               label="ชื่อ-นามสกุล"
               value={fullName}
-              onChange={(event) =>
-                setFullName(event.target.value)
-              }
+              onChange={(event) => setFullName(event.target.value)}
               placeholder="กรอกชื่อ-นามสกุล"
-              startIcon={
-                <UserRound className="size-4" />
-              }
+              startIcon={<UserRound className="size-4" />}
             />
 
             <Input
@@ -265,7 +193,7 @@ export function RegisterForm() {
               value={phoneNumber}
               onChange={(event) => {
                 const digits = event.target.value
-                  .replace(/[^0-9]/g, "")
+                  .replace(/\D/g, "")
                   .slice(0, 10);
 
                 setPhoneNumber(digits);
@@ -273,13 +201,9 @@ export function RegisterForm() {
                 if (!digits) {
                   setPhoneError(null);
                 } else if (!digits.startsWith("0")) {
-                  setPhoneError(
-                    "เบอร์โทรศัพท์ต้องขึ้นต้นด้วย 0",
-                  );
+                  setPhoneError("เบอร์โทรศัพท์ต้องขึ้นต้นด้วย 0");
                 } else if (digits.length < 10) {
-                  setPhoneError(
-                    "กรุณากรอกเบอร์โทรศัพท์ให้ครบ 10 หลัก",
-                  );
+                  setPhoneError("กรุณากรอกเบอร์โทรศัพท์ให้ครบ 10 หลัก");
                 } else {
                   setPhoneError(null);
                 }
@@ -288,22 +212,16 @@ export function RegisterForm() {
               placeholder="0812345678"
               inputMode="numeric"
               maxLength={10}
-              startIcon={
-                <Phone className="size-4" />
-              }
+              startIcon={<Phone className="size-4" />}
               autoComplete="tel"
             />
 
             <Input
               label="LINE ID (ทางเลือก)"
               value={lineId}
-              onChange={(event) =>
-                setLineId(event.target.value)
-              }
+              onChange={(event) => setLineId(event.target.value)}
               placeholder="line_id_123"
-              startIcon={
-                <MessageCircle className="size-4" />
-              }
+              startIcon={<MessageCircle className="size-4" />}
             />
           </div>
 
@@ -314,8 +232,7 @@ export function RegisterForm() {
             />
 
             <p>
-              ข้อมูลนี้จะถูกใช้เพื่อติดต่อท่าน
-              ในกรณีที่พบสิ่งของที่ท่านแจ้งหาย
+              ข้อมูลนี้จะถูกใช้เพื่อติดต่อท่าน ในกรณีที่พบสิ่งของที่ท่านแจ้งหาย
               หรือเพื่อยืนยันตัวตนเมื่อมารับของ
             </p>
           </div>

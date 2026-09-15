@@ -1,15 +1,16 @@
 import Link from "next/link";
-import { Bell, CircleUserRound, Search } from "lucide-react";
+import { Bell, CircleUserRound } from "lucide-react";
 
-import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
 
 export interface JerYungHeaderProps {
   className?: string;
+  profileHref?: string;
 }
 
 export function JerYungHeader({
   className,
+  profileHref = "/profile",
 }: JerYungHeaderProps) {
   return (
     <div
@@ -18,32 +19,6 @@ export function JerYungHeader({
         className,
       )}
     >
-      <form
-        action="/items"
-        method="get"
-        className="w-full max-w-sm"
-      >
-        <Input
-          type="search"
-          name="q"
-          aria-label="ค้นหาสิ่งของ"
-          placeholder="ค้นหาสิ่งของ..."
-          startIcon={
-            <Search
-              className="size-5"
-              aria-hidden="true"
-            />
-          }
-        />
-
-        <button
-          type="submit"
-          className="sr-only"
-        >
-          ค้นหา
-        </button>
-      </form>
-
       <div className="ml-auto flex items-center gap-2">
         <button
           type="button"
@@ -62,7 +37,7 @@ export function JerYungHeader({
         </button>
 
         <Link
-          href="/profile"
+          href={profileHref}
           className={cn(
             "inline-flex size-10 items-center justify-center rounded-lg",
             "text-text-secondary transition-colors",
