@@ -61,11 +61,16 @@ function formatDate(value: string) {
     return value;
   }
 
-  return new Intl.DateTimeFormat("th-TH", {
+  const formattedDate = new Intl.DateTimeFormat("th-TH", {
     day: "numeric",
     month: "short",
     year: "numeric",
   }).format(date);
+
+  const hh = String(date.getHours()).padStart(2, "0");
+  const mm = String(date.getMinutes()).padStart(2, "0");
+
+  return `${formattedDate}, ${hh}:${mm} น.`;
 }
 
 function getCentralStatusLabel(status: CentralStatus) {
@@ -573,7 +578,9 @@ export interface StorageDetailModalProps {
 }
 
 export function StorageDetailModal({ item, onClose }: StorageDetailModalProps) {
-  const mainImage = item.imageUrl[0] ? getImageUrl(item.imageUrl[0]) : null;
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+
+  const mainImage = item.imageUrl[activeImageIndex] ? getImageUrl(item.imageUrl[activeImageIndex]) : null;
 
   const contactName = item.users?.userName ?? "เจ้าหน้าที่จุดรับฝากกลาง";
 
@@ -593,14 +600,13 @@ export function StorageDetailModal({ item, onClose }: StorageDetailModalProps) {
 
         {/* Images */}
         <section className="border-b border-border p-7 lg:border-b-0 lg:border-r">
-          <div className="flex min-h-[420px] items-center justify-center overflow-hidden rounded-xl bg-surface-muted">
+          <div className="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-xl bg-surface-muted">
             {mainImage ? (
               <Image
                 src={mainImage}
                 alt={item.transactionItemsName}
-                width={900}
-                height={650}
-                className="h-full max-h-[500px] w-full object-contain"
+                fill
+                className="object-contain"
               />
             ) : (
               <ImageIcon className="size-16 text-text-secondary/35" />
@@ -608,16 +614,21 @@ export function StorageDetailModal({ item, onClose }: StorageDetailModalProps) {
           </div>
 
           {item.imageUrl.length > 1 ? (
-            <div className="mt-4 flex gap-3 overflow-x-auto">
-              {item.imageUrl.slice(0, 5).map((image) => (
-                <Image
+            <div className="mt-4 flex gap-3 overflow-x-auto p-1">
+              {item.imageUrl.slice(0, 5).map((image, index) => (
+                <button
                   key={image}
-                  src={getImageUrl(image)}
-                  alt=""
-                  width={110}
-                  height={86}
-                  className="h-20 w-24 shrink-0 rounded-lg border border-border object-cover"
-                />
+                  type="button"
+                  onClick={() => setActiveImageIndex(index)}
+                  className={`relative h-20 w-24 shrink-0 overflow-hidden rounded-lg transition-all ${activeImageIndex === index ? "ring-2 ring-brand-purple ring-offset-2" : "opacity-60 hover:opacity-100"}`}
+                >
+                  <Image
+                    src={getImageUrl(image)}
+                    alt=""
+                    fill
+                    className="object-cover"
+                  />
+                </button>
               ))}
             </div>
           ) : null}
@@ -702,9 +713,13 @@ export function StorageDetailModal({ item, onClose }: StorageDetailModalProps) {
                 <span>
                   {item.currentStatus === "PENDING" && item.transactionItemsStorageType === "CENTRAL"
                     ? "ฝากไว้ที่จุดรับฝากกลาง"
-                    : item.currentStatus
-                      ? getCentralStatusLabel(item.currentStatus)
-                      : "ไม่ทราบสถานะ"}
+                    : item.currentStatus === "PENDING" && item.transactionItemsStorageType === "SELF"
+                      ? "ของอยู่กับผู้พบ"
+                      : item.currentStatus === "PENDING"
+                        ? "กำลังตามหา"
+                        : item.currentStatus
+                          ? getCentralStatusLabel(item.currentStatus)
+                          : "ไม่ทราบสถานะ"}
                 </span>
               </div>
             </div>
@@ -724,14 +739,6 @@ export function StorageDetailModal({ item, onClose }: StorageDetailModalProps) {
               </div>
             </div>
 
-            <button
-              type="button"
-              disabled={!contactPhone}
-              className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-brand-yellow text-sm font-semibold text-foreground transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <MessageSquare className="size-4" />
-              ติดต่อขอรับคืน
-            </button>
           </article>
         </section>
       </div>

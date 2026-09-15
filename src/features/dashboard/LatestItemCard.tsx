@@ -1,9 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import {
-  MapPin,
-  Package,
-} from "lucide-react";
+import { MapPin, Package } from "lucide-react";
 
 import { Badge } from "@/components/ui/Badge";
 import { type TransactionItemListItem } from "@/types/transaction-item";
@@ -11,22 +8,26 @@ import { type TransactionItemListItem } from "@/types/transaction-item";
 export interface LatestItemCardProps {
   item: TransactionItemListItem;
   basePath?: string;
+  onClick?: () => void;
 }
 
 function formatItemDate(value: string) {
-  return value
-    .replace("T", " ")
-    .slice(0, 16);
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value.replace("T", " ").slice(0, 16);
+  }
+
+  const yyyy = date.getFullYear();
+  const MM = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  const hh = String(date.getHours()).padStart(2, "0");
+  const mm = String(date.getMinutes()).padStart(2, "0");
+
+  return `${yyyy}-${MM}-${dd} ${hh}:${mm}`;
 }
 
-function getItemImageUrl(
-  imagePath?: string,
-) {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_API_URL?.replace(
-      /\/+$/,
-      "",
-    );
+function getItemImageUrl(imagePath?: string) {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "");
 
   if (!baseUrl || !imagePath) {
     return null;
@@ -38,9 +39,9 @@ function getItemImageUrl(
 export function LatestItemCard({
   item,
   basePath = "/items",
+  onClick,
 }: LatestItemCardProps) {
-  const isLost =
-    item.transactionItemsPostType === "LOST";
+  const isLost = item.transactionItemsPostType === "LOST";
 
   const location = [
     item.location?.locationName,
@@ -49,15 +50,10 @@ export function LatestItemCard({
     .filter(Boolean)
     .join(" • ");
 
-  const imageUrl = getItemImageUrl(
-    item.imageUrl?.[0],
-  );
+  const imageUrl = getItemImageUrl(item.imageUrl?.[0]);
 
-  return (
-    <Link
-      href={`${basePath}/${item.transactionItemId}`}
-      className="group block overflow-hidden rounded-xl border border-border bg-surface transition hover:-translate-y-0.5 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-purple"
-    >
+  const innerContent = (
+    <>
       <div className="relative flex aspect-[5/3] items-center justify-center overflow-hidden bg-surface-muted">
         {imageUrl ? (
           <Image
@@ -75,13 +71,7 @@ export function LatestItemCard({
         )}
 
         <div className="absolute left-3 top-3">
-          <Badge
-            variant={
-              isLost
-                ? "danger"
-                : "yellow"
-            }
-          >
+          <Badge variant={isLost ? "danger" : "yellow"}>
             {isLost ? "หาย" : "พบ"}
           </Badge>
         </div>
@@ -91,28 +81,39 @@ export function LatestItemCard({
         </span>
       </div>
 
-      <div className="p-4">
-        <h3 className="font-semibold text-foreground">
+      <div className="p-4 text-left">
+        <h3 className="font-semibold text-foreground truncate">
           {item.transactionItemsName}
         </h3>
 
         <div className="mt-2 flex items-center gap-1.5 text-xs text-text-secondary">
-          <MapPin
-            className="size-3.5 shrink-0"
-            aria-hidden="true"
-          />
+          <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
 
-          <span>
+          <span className="truncate">
             {location || "ไม่ระบุสถานที่"}
           </span>
         </div>
 
         <p className="mt-1 text-xs text-text-secondary">
-          {formatItemDate(
-            item.transactionItemsDate,
-          )}
+          {formatItemDate(item.transactionItemsDate)}
         </p>
       </div>
+    </>
+  );
+
+  const className = "group block w-full overflow-hidden rounded-xl border border-border bg-surface transition hover:-translate-y-0.5 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-purple";
+
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className={className}>
+        {innerContent}
+      </button>
+    );
+  }
+
+  return (
+    <Link href={`${basePath}/${item.transactionItemId}`} className={className}>
+      {innerContent}
     </Link>
   );
 }

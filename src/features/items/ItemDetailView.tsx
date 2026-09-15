@@ -54,6 +54,19 @@ function getItemImageUrl(
   return `${baseUrl}/api/images/${imagePath}`;
 }
 
+function formatDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  const formattedDate = new Intl.DateTimeFormat("th-TH", {
+    day: "numeric",
+    month: "short",
+    year: "numeric"
+  }).format(date);
+  const hh = String(date.getHours()).padStart(2, "0");
+  const mm = String(date.getMinutes()).padStart(2, "0");
+  return `${formattedDate}, ${hh}:${mm} น.`;
+}
+
 export async function ItemDetailView({
   id,
   basePath,
@@ -192,7 +205,7 @@ export async function ItemDetailView({
                     </p>
 
                     <p className="mt-1 text-sm text-text-secondary">
-                      {item.Transaction_items_date}
+                      {formatDate(item.Transaction_items_date)}
                     </p>
                   </div>
                 </div>
