@@ -1,24 +1,18 @@
 import { PageContainer } from "@/components/layout/PageContainer";
-import { DashboardFilterBar } from "@/features/dashboard/DashboardFilterBar";
+import { DashboardInteractive } from "@/features/dashboard/DashboardInteractive";
 import { DashboardStats } from "@/features/dashboard/DashboardStats";
-import { LatestItemsTabs } from "@/features/dashboard/LatestItemsTabs";
 import { DashboardQuickActions } from "@/features/dashboard/DashboardQuickActions";
 import {
   getLatestFoundItems,
   getLatestLostItems,
 } from "@/services/dashboard.service";
-import { getTransactionItems } from "@/services/transaction-item.service";
 
 export interface DashboardViewProps {
-  query?: string;
   basePath?: string;
-  filterAction?: string;
 }
 
 export async function DashboardView({
-  query = "",
   basePath = "/items",
-  filterAction = "/dashboard",
 }: DashboardViewProps) {
   const [
     latestLostResponse,
@@ -28,31 +22,8 @@ export async function DashboardView({
     getLatestFoundItems(),
   ]);
 
-  let lostItems = latestLostResponse.content.content;
-  let foundItems = latestFoundResponse.content.content;
-
-  if (query) {
-    const [
-      searchedLostResponse,
-      searchedFoundResponse,
-    ] = await Promise.all([
-      getTransactionItems({
-        type: "LOST",
-        keyword: query,
-        page: 0,
-        limit: 4,
-      }),
-      getTransactionItems({
-        type: "FOUND",
-        keyword: query,
-        page: 0,
-        limit: 4,
-      }),
-    ]);
-
-    lostItems = searchedLostResponse.content.content;
-    foundItems = searchedFoundResponse.content.content;
-  }
+  const lostItems = latestLostResponse.content.content;
+  const foundItems = latestFoundResponse.content.content;
 
   return (
     <div className="py-8">
@@ -76,9 +47,7 @@ export async function DashboardView({
           />
         </section>
 
-        <DashboardFilterBar defaultQuery={query} actionPath={filterAction} />
-
-        <LatestItemsTabs
+        <DashboardInteractive
           lostItems={lostItems}
           foundItems={foundItems}
           basePath={basePath}

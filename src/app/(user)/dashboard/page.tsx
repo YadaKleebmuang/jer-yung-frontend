@@ -2,23 +2,11 @@ export const dynamic = "force-dynamic";
 
 import { DashboardView } from "@/features/dashboard/DashboardView";
 
-export interface DashboardPageProps {
-  searchParams: Promise<{
-    q?: string;
-  }>;
-}
-
-export default async function DashboardPage({
-  searchParams,
-}: DashboardPageProps) {
-  const { q = "" } = await searchParams;
-  const query = q.trim();
+export default async function DashboardPage() {
 
   return (
     <DashboardView
-      query={query}
       basePath="/items"
-      filterAction="/dashboard"
     />
   );
 }

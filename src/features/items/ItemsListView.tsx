@@ -2,8 +2,9 @@ import Link from "next/link";
 import {
   ChevronLeft,
   ChevronRight,
-  Search,
 } from "lucide-react";
+
+import { ItemsSearchInput } from "@/features/items/ItemsSearchInput";
 
 import { PageContainer } from "@/components/layout/PageContainer";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -53,25 +54,27 @@ export async function ItemsListView({
   const pagination = response.content;
   const items = pagination.content;
 
-  function itemsHref({
-    nextType = activeType,
-    nextPage,
-  }: {
-    nextType?: TransactionItemPostType;
+  function itemsHref(options?: {
+    nextType?: TransactionItemPostType | null;
     nextPage?: number;
-  } = {}) {
+  }) {
     const params = new URLSearchParams();
 
-    if (nextType) {
-      params.set("type", nextType);
+    const finalType =
+      options && options.nextType !== undefined
+        ? options.nextType
+        : activeType;
+
+    if (finalType) {
+      params.set("type", finalType);
     }
 
     if (query) {
       params.set("q", query);
     }
 
-    if (nextPage && nextPage > 1) {
-      params.set("page", String(nextPage));
+    if (options?.nextPage && options.nextPage > 1) {
+      params.set("page", String(options.nextPage));
     }
 
     const search = params.toString();
@@ -95,39 +98,13 @@ export async function ItemsListView({
         </section>
 
         <section className="mt-6 rounded-2xl bg-surface p-5">
-          <form
-            action={basePath}
-            method="get"
-            className="flex flex-col gap-4 lg:flex-row lg:items-center"
-          >
-            {activeType && (
-              <input
-                type="hidden"
-                name="type"
-                value={activeType}
-              />
-            )}
-
-            <div className="flex min-h-11 flex-1 items-center gap-3 rounded-lg bg-surface-muted px-4">
-              <Search
-                className="size-5 shrink-0 text-text-secondary"
-                aria-hidden="true"
-              />
-
-              <input
-                type="search"
-                name="q"
-                defaultValue={query}
-                placeholder="ค้นหาจากชื่อ, สถานที่, หมวดหมู่..."
-                aria-label="ค้นหารายการสิ่งของ"
-                className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-text-secondary"
-              />
-            </div>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+            <ItemsSearchInput basePath={basePath} />
 
             <div className="flex flex-wrap gap-2">
               <Link
                 href={itemsHref({
-                  nextType: undefined,
+                  nextType: null,
                 })}
                 className={
                   !activeType
@@ -164,7 +141,7 @@ export async function ItemsListView({
                 พบของ
               </Link>
             </div>
-          </form>
+          </div>
         </section>
 
         <section className="mt-6 rounded-2xl bg-surface p-6">
