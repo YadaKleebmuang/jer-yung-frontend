@@ -216,25 +216,29 @@ export default async function ItemDetailPage({
                 </div>
 
 
-                <div className="flex gap-3">
-                  <Warehouse className="mt-0.5 size-5 shrink-0 text-brand-purple" />
+                {item.Transaction_items_post_type ===
+                  "FOUND" &&
+                  item.Transaction_items_storage_type && (
+                    <div className="flex gap-3">
+                      <Warehouse className="mt-0.5 size-5 shrink-0 text-brand-purple" />
 
-                  <div>
-                    <p className="text-sm font-medium text-foreground">
-                      รูปแบบการเก็บรักษา
-                    </p>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">
+                          รูปแบบการเก็บรักษา
+                        </p>
 
-                    <p className="mt-1 text-sm text-text-secondary">
-                      {item.Transaction_items_storage_type ===
-                      "CENTRAL"
-                        ? "ส่งเก็บที่ศูนย์กลาง"
-                        : item.Transaction_items_storage_type ===
-                            "SELF"
-                          ? "ผู้เก็บได้เก็บรักษาเอง"
-                          : item.Transaction_items_storage_type}
-                    </p>
-                  </div>
-                </div>
+                        <p className="mt-1 text-sm text-text-secondary">
+                          {item.Transaction_items_storage_type ===
+                          "CENTRAL"
+                            ? "ส่งเก็บที่ศูนย์กลาง"
+                            : item.Transaction_items_storage_type ===
+                                "SELF"
+                              ? "ผู้เก็บได้เก็บรักษาเอง"
+                              : item.Transaction_items_storage_type}
+                        </p>
+                      </div>
+                    </div>
+                  )}
               </div>
 
               {item.Transaction_item_reference_tag && (
