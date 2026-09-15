@@ -192,3 +192,11 @@ export function warehouseReceiveCentralItem(
     formData,
   );
 }
+
+export function handoverToCentral(
+  itemId: number,
+) {
+  return apiClient.put<ApiResponse<unknown>>(
+    `/api/transaction-items/${itemId}/handover-to-central`,
+  );
+}
