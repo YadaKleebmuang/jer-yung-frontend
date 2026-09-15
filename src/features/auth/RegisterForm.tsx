@@ -265,7 +265,7 @@ export function RegisterForm() {
               value={phoneNumber}
               onChange={(event) => {
                 const digits = event.target.value
-                  .replace(/[^0-9]/g, "")
+                  .replace(/\D/g, "")
                   .slice(0, 10);
 
                 setPhoneNumber(digits);

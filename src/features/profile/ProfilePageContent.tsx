@@ -371,15 +371,21 @@ export default function ProfilePage() {
                         ? form.userPhoneNumber
                         : user?.userPhoneNumber ?? ""
                     }
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      const sanitized = event.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 10);
+
                       setForm((current) => ({
                         ...current,
-                        userPhoneNumber: event.target.value,
-                      }))
-                    }
+                        userPhoneNumber: sanitized,
+                      }));
+                    }}
                     readOnly={!editing}
                     disabled={!editing || saving}
                     placeholder="ยังไม่มีข้อมูล"
+                    inputMode="numeric"
+                    maxLength={10}
                     className="h-12 w-full rounded-lg border border-border bg-surface-muted pl-11 pr-4 text-sm text-text-secondary"
                   />
                 </div>

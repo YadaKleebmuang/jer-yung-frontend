@@ -950,40 +950,6 @@ export default function StoragePage() {
           ) : null}
         </section>
 
-        <section className="mt-7">
-          <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand-purple/10 bg-surface px-5 py-4">
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-xl bg-brand-purple/10">
-                <Warehouse className="size-5 text-brand-purple" />
-              </div>
-
-              <div>
-                <p className="font-semibold text-foreground">
-                  รายการรอรับเข้าคลัง
-                </p>
-                <p className="mt-0.5 text-sm text-text-secondary">
-                  {pendingHandoverLoading
-                    ? "กำลังตรวจสอบรายการ..."
-                    : validPendingHandoverItems.length > 0
-                      ? `มี ${validPendingHandoverItems.length} รายการรอรับ`
-                      : "ไม่มีรายการรอรับในขณะนี้"}
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() =>
-                setPendingHandoverOpen(true)
-              }
-              disabled={pendingHandoverLoading}
-              className="rounded-lg border border-brand-purple/20 px-4 py-2 text-sm font-semibold text-brand-purple hover:bg-brand-purple/5 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              ดูรายการ
-            </button>
-          </div>
-        </section>
-
         {pendingHandoverOpen ? (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
             <div className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-surface p-6 shadow-xl">

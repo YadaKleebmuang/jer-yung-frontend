@@ -1067,7 +1067,7 @@ export function StorageEditModal({
                   <button
                     type="button"
                     disabled
-                    title="รอเชื่อมการแก้ไขรูปภาพ"
+                    title="ยังไม่รองรับการแก้ไขรูปภาพผ่าน API"
                     className="flex aspect-[4/3] flex-col items-center justify-center rounded-lg border border-dashed border-brand-purple/30 bg-surface-muted text-brand-purple opacity-60"
                   >
                     <ImagePlus className="size-5" />
@@ -1111,7 +1111,10 @@ export function StorageEditModal({
                       หมวดหมู่
                     </label>
 
-                    <div className="mt-1.5 flex h-10 items-center rounded-lg bg-surface-muted px-3 text-sm">
+                    <div
+                      title="ยังไม่รองรับการแก้ไขผ่าน API"
+                      className="mt-1.5 flex h-10 items-center rounded-lg bg-surface-muted px-3 text-sm cursor-not-allowed opacity-80"
+                    >
                       {item.categories
                         ?.categoryName ??
                         "—"}
@@ -1123,7 +1126,10 @@ export function StorageEditModal({
                       หมายเลขซีเรียล / IMEI
                     </label>
 
-                    <div className="mt-1.5 flex h-10 items-center rounded-lg bg-surface-muted px-3 text-sm text-text-secondary">
+                    <div
+                      title="ไม่มีฟิลด์นี้ในฐานข้อมูล"
+                      className="mt-1.5 flex h-10 items-center rounded-lg bg-surface-muted px-3 text-sm text-text-secondary cursor-not-allowed opacity-80"
+                    >
                       ไม่มีข้อมูล
                     </div>
                   </div>
@@ -1166,7 +1172,10 @@ export function StorageEditModal({
                     <label className="block text-xs text-text-secondary">
                       ชื่อ-นามสกุล ผู้นำส่ง
                     </label>
-                    <div className="mt-1.5 flex h-10 items-center gap-2 rounded-lg bg-surface-muted px-3 text-sm">
+                    <div
+                      title="ยังไม่รองรับการแก้ไขผ่าน API"
+                      className="mt-1.5 flex h-10 items-center gap-2 rounded-lg bg-surface-muted px-3 text-sm cursor-not-allowed opacity-80"
+                    >
                       <UserRound className="size-4 text-text-secondary" />
                       {item.users?.userName ??
                         "ไม่มีข้อมูล"}
@@ -1177,7 +1186,10 @@ export function StorageEditModal({
                     <label className="block text-xs text-text-secondary">
                       เบอร์โทร / ติดต่อ
                     </label>
-                    <div className="mt-1.5 flex h-10 items-center gap-2 rounded-lg bg-surface-muted px-3 text-sm">
+                    <div
+                      title="ยังไม่รองรับการแก้ไขผ่าน API"
+                      className="mt-1.5 flex h-10 items-center gap-2 rounded-lg bg-surface-muted px-3 text-sm cursor-not-allowed opacity-80"
+                    >
                       <Phone className="size-4 text-text-secondary" />
                       {item.users
                         ?.userPhoneNumber ??
@@ -1189,7 +1201,10 @@ export function StorageEditModal({
                     <label className="block text-xs text-text-secondary">
                       หน่วยงาน / สถานที่
                     </label>
-                    <div className="mt-1.5 flex h-10 items-center gap-2 rounded-lg bg-surface-muted px-3 text-sm">
+                    <div
+                      title="ยังไม่รองรับการแก้ไขผ่าน API"
+                      className="mt-1.5 flex h-10 items-center gap-2 rounded-lg bg-surface-muted px-3 text-sm cursor-not-allowed opacity-80"
+                    >
                       <Building2 className="size-4 text-text-secondary" />
                       {item.location
                         ?.locationName ??
@@ -1201,7 +1216,10 @@ export function StorageEditModal({
                     <label className="block text-xs text-text-secondary">
                       ผู้รับเรื่องเข้าคลัง
                     </label>
-                    <div className="mt-1.5 flex h-10 items-center rounded-lg bg-surface-muted px-3 text-sm">
+                    <div
+                      title="ยังไม่รองรับการแก้ไขผ่าน API"
+                      className="mt-1.5 flex h-10 items-center rounded-lg bg-surface-muted px-3 text-sm cursor-not-allowed opacity-80"
+                    >
                       เจ้าหน้าที่รับฝาก
                     </div>
                   </div>
@@ -1243,7 +1261,10 @@ export function StorageEditModal({
                     ตำแหน่ง / อาคาร
                   </p>
 
-                  <div className="mt-1.5 flex h-10 items-center rounded-lg bg-surface-muted px-3 text-sm">
+                  <div
+                    title="ยังไม่รองรับการแก้ไขผ่าน API"
+                    className="mt-1.5 flex h-10 items-center rounded-lg bg-surface-muted px-3 text-sm cursor-not-allowed opacity-80"
+                  >
                     {item.location
                       ?.locationName ??
                       "—"}
@@ -1283,7 +1304,10 @@ export function StorageEditModal({
                     <p className="text-xs text-text-secondary">
                       ผู้รับคืน / บันทึกการส่งมอบ
                     </p>
-                    <div className="mt-1.5 flex h-10 items-center rounded-lg bg-surface-muted px-3 text-sm text-text-secondary">
+                    <div
+                      title="ยังไม่รองรับการแก้ไขผ่าน API"
+                      className="mt-1.5 flex h-10 items-center rounded-lg bg-surface-muted px-3 text-sm text-text-secondary cursor-not-allowed opacity-80"
+                    >
                       ยังไม่มีข้อมูล
                     </div>
                   </div>
@@ -1292,7 +1316,10 @@ export function StorageEditModal({
                     <p className="text-xs text-text-secondary">
                       หมายเหตุการแก้ไข
                     </p>
-                    <div className="mt-1.5 flex h-10 items-center rounded-lg bg-surface-muted px-3 text-sm text-text-secondary">
+                    <div
+                      title="ยังไม่รองรับการแก้ไขผ่าน API"
+                      className="mt-1.5 flex h-10 items-center rounded-lg bg-surface-muted px-3 text-sm text-text-secondary cursor-not-allowed opacity-80"
+                    >
                       —
                     </div>
                   </div>
