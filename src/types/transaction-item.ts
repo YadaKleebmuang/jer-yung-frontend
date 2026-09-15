@@ -30,6 +30,11 @@ export interface TransactionItemListItem {
   transactionItemsLocationDetails: string | null;
   transactionItemsDate: string;
   transactionItemsStorageType: string;
+  currentStatus?:
+    | "PENDING"
+    | "FOUNDED"
+    | "IN_CENTER"
+    | "RETURNED";
   location: TransactionItemLocation | null;
   categories: TransactionItemCategory | null;
   users: TransactionItemUser | null;

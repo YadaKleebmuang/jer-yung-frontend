@@ -563,9 +563,17 @@ export function StorageInventoryModal({
                           </td>
 
                           <td className="px-5 py-5 text-center">
-                            <span className="inline-flex whitespace-nowrap rounded-full bg-brand-purple/10 px-2.5 py-1 text-xs font-semibold text-brand-purple">
-                              รอดำเนินการส่งคืน
-                            </span>
+                            {item.currentStatus ? (
+                              <span className="inline-flex whitespace-nowrap rounded-full bg-brand-purple/10 px-2.5 py-1 text-xs font-semibold text-brand-purple">
+                                {getCentralStatusLabel(
+                                  item.currentStatus,
+                                )}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-text-secondary">
+                                —
+                              </span>
+                            )}
                           </td>
 
                           <td className="px-5 py-5">
@@ -592,16 +600,19 @@ export function StorageInventoryModal({
                                 <Pencil className="size-4" />
                               </button>
 
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  onReturn(item)
-                                }
-                                className="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md bg-brand-purple px-3 text-xs font-semibold text-white transition-colors hover:bg-brand-purple-hover"
-                              >
-                                ส่งคืน
-                                <Send className="size-3" />
-                              </button>
+                              {item.currentStatus ===
+                              "IN_CENTER" ? (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    onReturn(item)
+                                  }
+                                  className="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md bg-brand-purple px-3 text-xs font-semibold text-white transition-colors hover:bg-brand-purple-hover"
+                                >
+                                  ส่งคืน
+                                  <Send className="size-3" />
+                                </button>
+                              ) : null}
                             </div>
                           </td>
                         </tr>

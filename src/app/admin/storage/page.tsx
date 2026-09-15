@@ -95,6 +95,25 @@ function mapDetailToListItem(
   };
 }
 
+function getStatusLabel(
+  status:
+    | "PENDING"
+    | "FOUNDED"
+    | "IN_CENTER"
+    | "RETURNED",
+) {
+  switch (status) {
+    case "PENDING":
+      return "รอดำเนินการ";
+    case "FOUNDED":
+      return "พบสิ่งของ";
+    case "IN_CENTER":
+      return "อยู่ในคลังกลาง";
+    case "RETURNED":
+      return "ส่งคืนแล้ว";
+  }
+}
+
 function formatDate(value: string) {
   const date = new Date(value);
 
@@ -121,6 +140,68 @@ function getImageUrl(path: string) {
   }
 
   return `${API_URL}/api/images/${path}`;
+}
+
+function CheckinImagePreview({
+  file,
+  disabled,
+  onRemove,
+}: {
+  file: File;
+  disabled: boolean;
+  onRemove: () => void;
+}) {
+  const [previewUrl, setPreviewUrl] =
+    useState("");
+
+  useEffect(() => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setPreviewUrl(reader.result);
+      }
+    };
+
+    reader.readAsDataURL(file);
+
+    return () => {
+      if (reader.readyState === FileReader.LOADING) {
+        reader.abort();
+      }
+    };
+  }, [file]);
+
+  return (
+    <div className="group relative overflow-hidden rounded-xl border border-border bg-background">
+      {previewUrl ? (
+        <Image
+          src={previewUrl}
+          alt={file.name}
+          width={180}
+          height={140}
+          unoptimized
+          className="h-28 w-full object-cover"
+        />
+      ) : (
+        <div className="h-28 bg-surface-muted" />
+      )}
+
+      <div className="truncate px-2 py-2 pr-9 text-xs text-text-secondary">
+        {file.name}
+      </div>
+
+      <button
+        type="button"
+        onClick={onRemove}
+        disabled={disabled}
+        aria-label={`ลบรูป ${file.name}`}
+        className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-black/65 text-sm font-bold text-white transition-opacity hover:bg-black/80 disabled:opacity-50"
+      >
+        ×
+      </button>
+    </div>
+  );
 }
 
 export default function StoragePage() {
@@ -494,6 +575,13 @@ export default function StoragePage() {
   function selectForCheckout(
     item: TransactionItemListItem,
   ) {
+    if (item.currentStatus !== "IN_CENTER") {
+      setCheckoutError(
+        "รายการนี้ไม่สามารถดำเนินการส่งคืนได้",
+      );
+      return;
+    }
+
     setInventoryOpen(false);
     setDetailItem(null);
     setEditItem(null);
@@ -818,13 +906,45 @@ export default function StoragePage() {
                     }
 
                     setCheckinImages(
-                      validFiles.slice(0, 5),
+                      (current) =>
+                        [
+                          ...current,
+                          ...validFiles,
+                        ].slice(0, 5),
                     );
                     setCheckinSuccess(null);
 
                     event.target.value = "";
                   }}
                 />
+
+                {checkinImages.length > 0 ? (
+                  <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    {checkinImages.map(
+                      (file, index) => (
+                        <CheckinImagePreview
+                          key={`${file.name}-${file.lastModified}-${index}`}
+                          file={file}
+                          disabled={
+                            checkinSubmitting
+                          }
+                          onRemove={() => {
+                            setCheckinImages(
+                              (current) =>
+                                current.filter(
+                                  (_, itemIndex) =>
+                                    itemIndex !==
+                                    index,
+                                ),
+                            );
+                            setCheckinError(null);
+                            setCheckinSuccess(null);
+                          }}
+                        />
+                      ),
+                    )}
+                  </div>
+                ) : null}
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
@@ -1230,9 +1350,17 @@ export default function StoragePage() {
                         )}
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <span className="rounded-full bg-brand-purple/10 px-2.5 py-1 text-xs font-semibold text-brand-purple">
-                          รอส่งคืน
-                        </span>
+                        {item.currentStatus ? (
+                          <span className="rounded-full bg-brand-purple/10 px-2.5 py-1 text-xs font-semibold text-brand-purple">
+                            {getStatusLabel(
+                              item.currentStatus,
+                            )}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-text-secondary">
+                            —
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}
