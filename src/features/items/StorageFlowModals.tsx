@@ -35,6 +35,7 @@ import { ApiError } from "@/services/api-client";
 import {
   updateCentralItemBasic,
   handoverToCentral,
+  deleteCentralItem,
   type CentralStatus,
   type CentralStorageStats,
 } from "@/services/central-storage.service";
@@ -171,17 +172,6 @@ export function StorageInventoryModal({
                 มหาวิทยาลัยราชภัฏบุรีรัมย์
               </p>
             </div>
-          </div>
-
-          <div className="flex shrink-0 items-center gap-3">
-            <button
-              type="button"
-              onClick={() => window.print()}
-              className="hidden h-10 items-center gap-2 rounded-lg bg-surface-muted px-4 text-sm font-semibold text-foreground transition-colors hover:bg-border sm:inline-flex"
-            >
-              <Printer className="size-4 text-brand-purple" />
-              พิมพ์รายงานสรุป
-            </button>
 
             <button
               type="button"
@@ -750,12 +740,14 @@ export interface StorageEditModalProps {
   item: TransactionItemListItem;
   onClose: () => void;
   onSaved: (item: TransactionItemListItem) => void;
+  onDeleted?: (itemId: number) => void;
 }
 
 export function StorageEditModal({
   item,
   onClose,
   onSaved,
+  onDeleted,
 }: StorageEditModalProps) {
   const [name, setName] = useState(item.transactionItemsName);
 
@@ -820,6 +812,9 @@ export function StorageEditModal({
         });
       }
 
+      const updatedCategory = categories.find(c => c.categoryId === Number(categoryId));
+      const updatedLocation = locations.find(l => l.locationId === Number(locationId));
+
       onSaved({
         ...item,
         transactionItemsName:
@@ -828,12 +823,36 @@ export function StorageEditModal({
           details.trim(),
         transactionItemsStorageType: storageType as any,
         currentStatus: currentStatus as CentralStatus,
+        categories: (updatedCategory as any) || item.categories,
+        location: (updatedLocation as any) || item.location,
       });
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
       } else {
         setError("ไม่สามารถอัปเดตเป็นจุดรับฝากกลางได้");
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!confirm("คุณต้องการลบรายการนี้ออกจากคลังกลางใช่หรือไม่?")) {
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+
+    try {
+      await deleteCentralItem(item.transactionItemId);
+      onDeleted?.(item.transactionItemId);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message);
+      } else {
+        setError("ไม่สามารถลบรายการได้");
       }
     } finally {
       setSaving(false);
@@ -1224,9 +1243,9 @@ export function StorageEditModal({
         <footer className="flex flex-col gap-3 border-t border-border bg-surface px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
           <button
             type="button"
-            disabled
-            title="ยังไม่เปิดการลบจาก Modal นี้"
-            className="inline-flex items-center gap-2 text-sm font-medium text-danger opacity-60"
+            onClick={handleDelete}
+            disabled={saving}
+            className="inline-flex items-center gap-2 text-sm font-medium text-danger transition-colors hover:text-danger/80 disabled:opacity-50"
           >
             <Trash2 className="size-4" />
             ลบรายการนี้ออกจากคลัง

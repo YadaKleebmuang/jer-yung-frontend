@@ -13,13 +13,12 @@ import {
 } from "react";
 
 import { PageContainer } from "@/components/layout/PageContainer";
-import {
-  getAdminDashboardStats,
-  getAdminDashboardWeekly,
-  type AdminDashboardStats,
-  type AdminDashboardWeeklyItem,
-} from "@/services/admin-dashboard.service";
+import { getAdminDashboardStats, getAdminDashboardWeekly, type AdminDashboardStats, type AdminDashboardWeeklyItem } from "@/services/admin-dashboard.service";
 import { ApiError } from "@/services/api-client";
+import { getCategories } from "@/services/category.service";
+import { getLocations } from "@/services/location.service";
+import { type Category } from "@/types/category";
+import { type Location } from "@/types/location";
 
 function formatDay(value: string) {
   const normalized = value.trim();
@@ -48,20 +47,12 @@ function formatDay(value: string) {
 }
 
 export default function AdminDashboardPage() {
-  const [stats, setStats] =
-    useState<AdminDashboardStats | null>(
-      null,
-    );
-
-  const [weekly, setWeekly] = useState<
-    AdminDashboardWeeklyItem[]
-  >([]);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [errorMessage, setErrorMessage] =
-    useState<string | null>(null);
+  const [stats, setStats] = useState<AdminDashboardStats | null>(null);
+  const [weekly, setWeekly] = useState<AdminDashboardWeeklyItem[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -71,9 +62,13 @@ export default function AdminDashboardPage() {
         const [
           statsResponse,
           weeklyResponse,
+          categoriesData,
+          locationsData,
         ] = await Promise.all([
           getAdminDashboardStats(),
           getAdminDashboardWeekly(),
+          getCategories().catch(() => []),
+          getLocations().catch(() => []),
         ]);
 
         if (cancelled) {
@@ -82,6 +77,8 @@ export default function AdminDashboardPage() {
 
         setStats(statsResponse.content);
         setWeekly(weeklyResponse.content);
+        setCategories(categoriesData);
+        setLocations(locationsData);
       } catch (error) {
         if (cancelled) {
           return;
@@ -329,9 +326,21 @@ export default function AdminDashboardPage() {
               </div>
 
               <div className="mt-5 rounded-lg bg-surface-muted p-4">
-                <p className="text-sm text-text-secondary">
-                  รอ API รายการหมวดหมู่จาก Backend
-                </p>
+                {loading ? (
+                  <p className="text-sm text-text-secondary">กำลังโหลด...</p>
+                ) : categories.length > 0 ? (
+                  <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                    {categories.map((c) => (
+                      <span key={c.categoryId} className="rounded-md bg-brand-purple/10 px-2 py-1 text-[11px] font-medium text-brand-purple">
+                        {c.categoryName}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-text-secondary">
+                    ยังไม่มีหมวดหมู่
+                  </p>
+                )}
               </div>
             </div>
 
@@ -356,9 +365,21 @@ export default function AdminDashboardPage() {
               </div>
 
               <div className="mt-5 rounded-lg bg-surface-muted p-4">
-                <p className="text-sm text-text-secondary">
-                  รอ API รายการสถานที่จาก Backend
-                </p>
+                {loading ? (
+                  <p className="text-sm text-text-secondary">กำลังโหลด...</p>
+                ) : locations.length > 0 ? (
+                  <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                    {locations.map((l) => (
+                      <span key={l.locationId} className="rounded-md bg-brand-yellow/30 px-2 py-1 text-[11px] font-medium text-foreground">
+                        {l.locationName}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-text-secondary">
+                    ยังไม่มีสถานที่
+                  </p>
+                )}
               </div>
             </div>
           </div>

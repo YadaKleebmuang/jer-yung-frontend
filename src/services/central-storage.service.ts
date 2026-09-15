@@ -214,3 +214,9 @@ export function getPendingHandoverItems() {
     "/api/transaction-items/pending-handover",
   );
 }
+
+export function deleteCentralItem(itemId: number) {
+  return apiClient.delete<ApiResponse<unknown>>(
+    `/api/transaction-items/${itemId}`
+  );
+}
