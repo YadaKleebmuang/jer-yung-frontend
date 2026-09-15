@@ -8,7 +8,7 @@ import { ItemsSearchInput } from "@/features/items/ItemsSearchInput";
 
 import { PageContainer } from "@/components/layout/PageContainer";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { LatestItemCard } from "@/features/dashboard/LatestItemCard";
+import { ItemsGrid } from "@/features/items/ItemsGrid";
 import { getTransactionItems } from "@/services/transaction-item.service";
 import { type TransactionItemPostType } from "@/types/transaction-item";
 
@@ -169,15 +169,7 @@ export async function ItemsListView({
               />
             </div>
           ) : (
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {items.map((item) => (
-                <LatestItemCard
-                  key={item.transactionItemId}
-                  item={item}
-                  basePath={basePath}
-                />
-              ))}
-            </div>
+            <ItemsGrid items={items} basePath={basePath} />
           )}
 
           {pagination.totalPages > 1 && (
