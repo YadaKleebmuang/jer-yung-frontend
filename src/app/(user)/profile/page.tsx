@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import {
   Mail,
   MessageCircle,
@@ -7,8 +10,62 @@ import {
 } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/PageContainer";
+import { ApiError } from "@/services/api-client";
+import {
+  getCurrentUser,
+  type CurrentUser,
+  type UserRole,
+} from "@/services/auth.service";
+
+function getRoleLabel(role: UserRole) {
+  switch (role) {
+    case "ADMIN":
+      return "ผู้ดูแลระบบ";
+    case "STAFF":
+      return "เจ้าหน้าที่";
+    case "USER":
+      return "ผู้ใช้งานระบบ";
+  }
+}
 
 export default function ProfilePage() {
+  const [user, setUser] =
+    useState<CurrentUser | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] =
+    useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getCurrentUser()
+      .then((response) => {
+        if (cancelled) return;
+
+        setUser(response.content);
+        setError(null);
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+
+        setUser(null);
+        setError(
+          err instanceof ApiError
+            ? err.message
+            : "ไม่สามารถโหลดข้อมูลโปรไฟล์ได้",
+        );
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <div className="py-8">
       <PageContainer>
@@ -22,8 +79,16 @@ export default function ProfilePage() {
           </p>
         </section>
 
+        {error ? (
+          <div
+            role="alert"
+            className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900"
+          >
+            {error}
+          </div>
+        ) : null}
+
         <div className="mt-8 grid gap-6 lg:grid-cols-[0.75fr_1.25fr]">
-          {/* Profile summary */}
           <aside className="rounded-2xl bg-surface p-6">
             <div className="flex flex-col items-center text-center">
               <div className="flex size-24 items-center justify-center rounded-full bg-brand-purple/10">
@@ -34,11 +99,14 @@ export default function ProfilePage() {
               </div>
 
               <h2 className="mt-5 text-xl font-bold text-foreground">
-                ข้อมูลผู้ใช้
+                {loading
+                  ? "กำลังโหลด..."
+                  : user?.userFullName ??
+                    "ข้อมูลผู้ใช้"}
               </h2>
 
               <p className="mt-1 text-sm text-text-secondary">
-                บัญชี Jer-Yung
+                {user?.userEmail ?? "บัญชี Jer-Yung"}
               </p>
             </div>
 
@@ -57,14 +125,15 @@ export default function ProfilePage() {
                   </p>
 
                   <p className="mt-0.5 text-xs text-text-secondary">
-                    ผู้ใช้งานระบบ
+                    {user
+                      ? getRoleLabel(user.userRole)
+                      : "กำลังโหลดข้อมูล"}
                   </p>
                 </div>
               </div>
             </div>
           </aside>
 
-          {/* Personal information */}
           <section className="rounded-2xl bg-surface p-6 lg:p-8">
             <div className="flex items-center justify-between gap-4">
               <div>
@@ -80,7 +149,7 @@ export default function ProfilePage() {
               <button
                 type="button"
                 disabled
-                title="รอเชื่อม API ข้อมูลผู้ใช้"
+                title="ยังไม่มี API สำหรับแก้ไขข้อมูลผู้ใช้"
                 className="rounded-lg bg-brand-purple px-4 py-2.5 text-sm font-semibold text-white opacity-50"
               >
                 แก้ไขข้อมูล
@@ -102,8 +171,14 @@ export default function ProfilePage() {
                   <input
                     id="profile-name"
                     type="text"
+                    value={user?.userFullName ?? ""}
+                    readOnly
                     disabled
-                    placeholder="รอข้อมูลจากบัญชีผู้ใช้"
+                    placeholder={
+                      loading
+                        ? "กำลังโหลด..."
+                        : "ไม่มีข้อมูล"
+                    }
                     className="h-12 w-full rounded-lg border border-border bg-surface-muted pl-11 pr-4 text-sm text-text-secondary"
                   />
                 </div>
@@ -123,8 +198,14 @@ export default function ProfilePage() {
                   <input
                     id="profile-email"
                     type="email"
+                    value={user?.userEmail ?? ""}
+                    readOnly
                     disabled
-                    placeholder="รอข้อมูลจากบัญชีผู้ใช้"
+                    placeholder={
+                      loading
+                        ? "กำลังโหลด..."
+                        : "ไม่มีข้อมูล"
+                    }
                     className="h-12 w-full rounded-lg border border-border bg-surface-muted pl-11 pr-4 text-sm text-text-secondary"
                   />
                 </div>
@@ -144,6 +225,8 @@ export default function ProfilePage() {
                   <input
                     id="profile-phone"
                     type="tel"
+                    value={user?.userPhoneNumber ?? ""}
+                    readOnly
                     disabled
                     placeholder="ยังไม่มีข้อมูล"
                     className="h-12 w-full rounded-lg border border-border bg-surface-muted pl-11 pr-4 text-sm text-text-secondary"
@@ -165,19 +248,14 @@ export default function ProfilePage() {
                   <input
                     id="profile-line"
                     type="text"
+                    value={user?.userLineId ?? ""}
+                    readOnly
                     disabled
                     placeholder="ยังไม่มีข้อมูล"
                     className="h-12 w-full rounded-lg border border-border bg-surface-muted pl-11 pr-4 text-sm text-text-secondary"
                   />
                 </div>
               </div>
-            </div>
-
-            <div className="mt-8 rounded-xl border border-dashed border-brand-purple/25 bg-brand-purple/5 p-4">
-              <p className="text-sm font-medium text-brand-purple">
-                ข้อมูลโปรไฟล์จะเชื่อมกับบัญชีผู้ใช้โดยอัตโนมัติ
-                เมื่อ Backend รองรับ API ข้อมูลผู้ใช้ปัจจุบัน
-              </p>
             </div>
           </section>
         </div>

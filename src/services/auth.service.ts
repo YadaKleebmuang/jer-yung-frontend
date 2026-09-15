@@ -52,3 +52,18 @@ export function register(
     payload,
   );
 }
+
+export interface CurrentUser {
+  userId: number;
+  userFullName: string;
+  userEmail: string;
+  userRole: UserRole;
+  userPhoneNumber: string | null;
+  userLineId: string | null;
+}
+
+export function getCurrentUser() {
+  return apiClient.get<ApiResponse<CurrentUser>>(
+    "/api/auth/users/me",
+  );
+}
