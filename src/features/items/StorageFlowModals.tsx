@@ -33,6 +33,7 @@ import {
 import { ApiError } from "@/services/api-client";
 import {
   updateCentralItemBasic,
+  handoverToCentral,
   type CentralStatus,
   type CentralStorageStats,
 } from "@/services/central-storage.service";
@@ -960,6 +961,35 @@ export function StorageEditModal({
     }
   }
 
+  async function handleHandover() {
+    if (
+      item.transactionItemsPostType !== "FOUND" ||
+      item.transactionItemsStorageType !== "SELF"
+    ) {
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+
+    try {
+      await handoverToCentral(item.transactionItemId);
+      onSaved({
+        ...item,
+        transactionItemsStorageType: "CENTRAL",
+        currentStatus: "IN_CENTER",
+      });
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message);
+      } else {
+        setError("ไม่สามารถอัปเดตเป็นจุดรับฝากกลางได้");
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
       <form
@@ -1246,12 +1276,30 @@ export function StorageEditModal({
                 </p>
 
                 <div className="mt-2 grid grid-cols-2 gap-2">
-                  <div className="flex h-10 items-center justify-center gap-2 rounded-lg bg-brand-purple/15 text-sm font-semibold text-brand-purple">
+                  <button
+                    type="button"
+                    onClick={item.transactionItemsStorageType === "SELF" && item.transactionItemsPostType === "FOUND" ? handleHandover : undefined}
+                    disabled={saving || (item.transactionItemsStorageType === "SELF" && item.transactionItemsPostType !== "FOUND")}
+                    className={
+                      item.transactionItemsStorageType === "CENTRAL"
+                        ? "flex h-10 items-center justify-center gap-2 rounded-lg bg-brand-purple/15 text-sm font-semibold text-brand-purple"
+                        : (item.transactionItemsStorageType === "SELF" && item.transactionItemsPostType === "FOUND")
+                        ? "flex h-10 items-center justify-center gap-2 rounded-lg border border-border bg-surface text-sm text-foreground hover:bg-surface-muted hover:text-brand-purple transition-colors disabled:opacity-50"
+                        : "flex h-10 items-center justify-center gap-2 rounded-lg bg-surface-muted text-sm text-text-secondary cursor-not-allowed opacity-80"
+                    }
+                    title={item.transactionItemsStorageType === "SELF" && item.transactionItemsPostType === "FOUND" ? "คลิกเพื่อนำของเข้าจุดรับฝากกลาง" : undefined}
+                  >
                     <Warehouse className="size-4" />
                     จุดรับฝากกลาง
-                  </div>
+                  </button>
 
-                  <div className="flex h-10 items-center justify-center rounded-lg bg-surface-muted text-sm text-text-secondary">
+                  <div
+                    className={
+                      item.transactionItemsStorageType === "SELF"
+                        ? "flex h-10 items-center justify-center rounded-lg bg-brand-purple/15 text-sm font-semibold text-brand-purple"
+                        : "flex h-10 items-center justify-center rounded-lg bg-surface-muted text-sm text-text-secondary"
+                    }
+                  >
                     อยู่ที่ตนเอง
                   </div>
                 </div>
@@ -1286,15 +1334,33 @@ export function StorageEditModal({
                 </p>
 
                 <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
-                  <div className="flex min-h-10 items-center justify-center rounded-lg bg-brand-yellow/40 px-2 text-center font-semibold">
+                  <div
+                    className={
+                      item.currentStatus === "PENDING" || item.currentStatus === "FOUNDED"
+                        ? "flex min-h-10 items-center justify-center rounded-lg bg-brand-yellow/40 px-2 text-center font-semibold"
+                        : "flex min-h-10 items-center justify-center rounded-lg bg-surface-muted px-2 text-center text-text-secondary"
+                    }
+                  >
                     รอตรวจรับ / บันทึก
                   </div>
 
-                  <div className="flex min-h-10 items-center justify-center rounded-lg bg-surface-muted px-2 text-center text-text-secondary">
+                  <div
+                    className={
+                      item.currentStatus === "IN_CENTER"
+                        ? "flex min-h-10 items-center justify-center rounded-lg bg-brand-yellow/40 px-2 text-center font-semibold"
+                        : "flex min-h-10 items-center justify-center rounded-lg bg-surface-muted px-2 text-center text-text-secondary"
+                    }
+                  >
                     รอดำเนินการ / รอเจ้าของ
                   </div>
 
-                  <div className="flex min-h-10 items-center justify-center rounded-lg bg-surface-muted px-2 text-center text-text-secondary">
+                  <div
+                    className={
+                      item.currentStatus === "RETURNED"
+                        ? "flex min-h-10 items-center justify-center rounded-lg bg-brand-yellow/40 px-2 text-center font-semibold"
+                        : "flex min-h-10 items-center justify-center rounded-lg bg-surface-muted px-2 text-center text-text-secondary"
+                    }
+                  >
                     ส่งมอบคืนแล้ว
                   </div>
                 </div>
@@ -1305,10 +1371,11 @@ export function StorageEditModal({
                       ผู้รับคืน / บันทึกการส่งมอบ
                     </p>
                     <div
-                      title="ยังไม่รองรับการแก้ไขผ่าน API"
-                      className="mt-1.5 flex h-10 items-center rounded-lg bg-surface-muted px-3 text-sm text-text-secondary cursor-not-allowed opacity-80"
+                      className={`mt-1.5 flex h-10 items-center rounded-lg px-3 text-sm ${item.currentStatus === "RETURNED" ? "bg-brand-purple/10 text-brand-purple font-medium" : "bg-surface-muted text-text-secondary cursor-not-allowed opacity-80"}`}
                     >
-                      ยังไม่มีข้อมูล
+                      {item.currentStatus === "RETURNED"
+                        ? (item.receiverName ?? "ไม่ระบุชื่อผู้รับคืน")
+                        : "ยังไม่มีข้อมูล"}
                     </div>
                   </div>
 

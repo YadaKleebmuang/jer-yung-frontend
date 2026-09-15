@@ -38,6 +38,7 @@ export interface TransactionItemListItem {
   location: TransactionItemLocation | null;
   categories: TransactionItemCategory | null;
   users: TransactionItemUser | null;
+  receiverName?: string | null;
 }
 
 export type TransactionItemStorageType =

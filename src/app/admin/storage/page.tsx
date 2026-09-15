@@ -93,6 +93,7 @@ function mapDetailToListItem(
             detail.Users.user_line_id,
         }
       : null,
+    receiverName: detail.Status_logs?.find(log => log.new_status === "RETURNED")?.receiver_name ?? null,
   };
 }
 
