@@ -1,14 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, Package } from "lucide-react";
+import { MapPin, Package, UserRound, Pencil } from "lucide-react";
 
 import { Badge } from "@/components/ui/Badge";
 import { type TransactionItemListItem } from "@/types/transaction-item";
+import { useCurrentUserId } from "@/hooks/useCurrentUserId";
 
 export interface LatestItemCardProps {
   item: TransactionItemListItem;
   basePath?: string;
   onClick?: () => void;
+  onEdit?: () => void;
 }
 
 function formatItemDate(value: string) {
@@ -40,7 +42,11 @@ export function LatestItemCard({
   item,
   basePath = "/items",
   onClick,
+  onEdit,
 }: LatestItemCardProps) {
+  const currentUserId = useCurrentUserId();
+  const isOwner = currentUserId !== null && item.users?.userId === currentUserId;
+
   const isLost = item.transactionItemsPostType === "LOST";
 
   const location = [
@@ -79,12 +85,37 @@ export function LatestItemCard({
         <span className="absolute right-3 top-3 rounded-md bg-white/80 px-2 py-1 text-[10px] text-text-secondary backdrop-blur-sm">
           ID: {item.transactionItemId}
         </span>
+
+        {isOwner && (
+          <div className="absolute bottom-0 left-0 rounded-tr-xl bg-brand-purple px-2.5 py-1 text-[10px] font-semibold text-white inline-flex items-center gap-1.5">
+            <UserRound className="size-3" />
+            โพสต์ของคุณ
+          </div>
+        )}
       </div>
 
       <div className="p-4 text-left">
-        <h3 className="font-semibold text-foreground truncate">
-          {item.transactionItemsName}
-        </h3>
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="font-semibold text-foreground truncate">
+            {item.transactionItemsName}
+          </h3>
+          
+          {isOwner && (
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (onEdit) onEdit();
+              }}
+              className="inline-flex shrink-0 items-center gap-1 rounded-md bg-brand-purple/15 px-2 py-1 text-[10px] font-semibold text-brand-purple transition-colors hover:bg-brand-purple/25 cursor-pointer"
+            >
+              <Pencil className="size-3" />
+              แก้ไข
+            </div>
+          )}
+        </div>
 
         <div className="mt-2 flex items-center gap-1.5 text-xs text-text-secondary">
           <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
@@ -101,7 +132,7 @@ export function LatestItemCard({
     </>
   );
 
-  const className = "group block w-full overflow-hidden rounded-xl border border-border bg-surface transition hover:-translate-y-0.5 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-purple";
+  const className = `group block w-full overflow-hidden rounded-xl border transition hover:-translate-y-0.5 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-purple ${isOwner ? "border-brand-purple/50 bg-brand-purple/[0.02]" : "border-border bg-surface"}`;
 
   if (onClick) {
     return (

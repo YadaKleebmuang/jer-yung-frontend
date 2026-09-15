@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { LatestItemCard } from "@/features/dashboard/LatestItemCard";
 import { StorageDetailModal } from "@/features/items/StorageFlowModals";
+import { UserEditPostModal } from "@/features/items/UserEditPostModal";
 import { type TransactionItemListItem } from "@/types/transaction-item";
 
 export interface ItemsGridProps {
@@ -12,6 +13,7 @@ export interface ItemsGridProps {
 
 export function ItemsGrid({ items, basePath }: ItemsGridProps) {
   const [selectedItem, setSelectedItem] = useState<TransactionItemListItem | null>(null);
+  const [editingItem, setEditingItem] = useState<TransactionItemListItem | null>(null);
 
   return (
     <>
@@ -22,6 +24,7 @@ export function ItemsGrid({ items, basePath }: ItemsGridProps) {
             item={item}
             basePath={basePath}
             onClick={() => setSelectedItem(item)}
+            onEdit={() => setEditingItem(item)}
           />
         ))}
       </div>
@@ -30,6 +33,18 @@ export function ItemsGrid({ items, basePath }: ItemsGridProps) {
         <StorageDetailModal
           item={selectedItem}
           onClose={() => setSelectedItem(null)}
+        />
+      )}
+
+      {editingItem && (
+        <UserEditPostModal
+          item={editingItem}
+          onClose={() => setEditingItem(null)}
+          onSaved={(updated) => {
+            // Ideally trigger a refetch or update local state
+            setEditingItem(null);
+            window.location.reload(); // Quick way to refresh data
+          }}
         />
       )}
     </>

@@ -45,6 +45,9 @@ export function JerYungSidebar({
       window.localStorage.removeItem(
         AUTH_ROLE_STORAGE_KEY,
       );
+      window.localStorage.removeItem(
+        "jeryung-user-id",
+      );
 
       router.replace("/login");
       router.refresh();
