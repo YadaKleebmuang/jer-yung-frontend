@@ -30,17 +30,13 @@ function getRoleLabel(role: UserRole) {
 }
 
 export default function ProfilePage() {
-  const [user, setUser] =
-    useState<CurrentUser | null>(null);
+  const [user, setUser] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] =
-    useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] =
-    useState<string | null>(null);
-  const [saveSuccess, setSaveSuccess] =
-    useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const [form, setForm] = useState({
     userFullName: "",
     userPhoneNumber: "",
@@ -56,12 +52,9 @@ export default function ProfilePage() {
 
         setUser(response.content);
         setForm({
-          userFullName:
-            response.content.userFullName,
-          userPhoneNumber:
-            response.content.userPhoneNumber ?? "",
-          userLineId:
-            response.content.userLineId ?? "",
+          userFullName: response.content.userFullName,
+          userPhoneNumber: response.content.userPhoneNumber ?? "",
+          userLineId: response.content.userLineId ?? "",
         });
         setError(null);
       })
@@ -91,8 +84,7 @@ export default function ProfilePage() {
 
     setForm({
       userFullName: user.userFullName,
-      userPhoneNumber:
-        user.userPhoneNumber ?? "",
+      userPhoneNumber: user.userPhoneNumber ?? "",
       userLineId: user.userLineId ?? "",
     });
     setSaveError(null);
@@ -104,8 +96,7 @@ export default function ProfilePage() {
     if (user) {
       setForm({
         userFullName: user.userFullName,
-        userPhoneNumber:
-          user.userPhoneNumber ?? "",
+        userPhoneNumber: user.userPhoneNumber ?? "",
         userLineId: user.userLineId ?? "",
       });
     }
@@ -129,29 +120,21 @@ export default function ProfilePage() {
 
       const response = await updateCurrentUser({
         userFullName: fullName,
-        userPhoneNumber:
-          form.userPhoneNumber.trim(),
+        userPhoneNumber: form.userPhoneNumber.trim(),
         userLineId: form.userLineId.trim(),
       });
 
       setUser(response.content);
       setForm({
-        userFullName:
-          response.content.userFullName,
-        userPhoneNumber:
-          response.content.userPhoneNumber ?? "",
-        userLineId:
-          response.content.userLineId ?? "",
+        userFullName: response.content.userFullName,
+        userPhoneNumber: response.content.userPhoneNumber ?? "",
+        userLineId: response.content.userLineId ?? "",
       });
       setEditing(false);
-      setSaveSuccess(
-        "บันทึกข้อมูลเรียบร้อยแล้ว",
-      );
+      setSaveSuccess("บันทึกข้อมูลเรียบร้อยแล้ว");
     } catch (err) {
       setSaveError(
-        err instanceof ApiError
-          ? err.message
-          : "ไม่สามารถบันทึกข้อมูลได้",
+        err instanceof ApiError ? err.message : "ไม่สามารถบันทึกข้อมูลได้",
       );
     } finally {
       setSaving(false);
@@ -162,9 +145,7 @@ export default function ProfilePage() {
     <div className="py-8">
       <PageContainer>
         <section>
-          <h1 className="text-3xl font-bold text-foreground">
-            โปรไฟล์ของฉัน
-          </h1>
+          <h1 className="text-3xl font-bold text-foreground">โปรไฟล์ของฉัน</h1>
 
           <p className="mt-2 text-text-secondary">
             จัดการข้อมูลบัญชีและข้อมูลติดต่อของคุณ
@@ -193,8 +174,7 @@ export default function ProfilePage() {
               <h2 className="mt-5 text-xl font-bold text-foreground">
                 {loading
                   ? "กำลังโหลด..."
-                  : user?.userFullName ??
-                    "ข้อมูลผู้ใช้"}
+                  : (user?.userFullName ?? "ข้อมูลผู้ใช้")}
               </h2>
 
               <p className="mt-1 text-sm text-text-secondary">
@@ -217,9 +197,7 @@ export default function ProfilePage() {
                   </p>
 
                   <p className="mt-0.5 text-xs text-text-secondary">
-                    {user
-                      ? getRoleLabel(user.userRole)
-                      : "กำลังโหลดข้อมูล"}
+                    {user ? getRoleLabel(user.userRole) : "กำลังโหลดข้อมูล"}
                   </p>
                 </div>
               </div>
@@ -255,9 +233,7 @@ export default function ProfilePage() {
                     disabled={saving}
                     className="rounded-lg bg-brand-purple px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
                   >
-                    {saving
-                      ? "กำลังบันทึก..."
-                      : "บันทึก"}
+                    {saving ? "กำลังบันทึก..." : "บันทึก"}
                   </button>
                 </div>
               ) : (
@@ -273,10 +249,7 @@ export default function ProfilePage() {
             </div>
 
             {saveError ? (
-              <p
-                role="alert"
-                className="mt-5 text-sm text-danger"
-              >
+              <p role="alert" className="mt-5 text-sm text-danger">
                 {saveError}
               </p>
             ) : null}
@@ -303,9 +276,7 @@ export default function ProfilePage() {
                     id="profile-name"
                     type="text"
                     value={
-                      editing
-                        ? form.userFullName
-                        : user?.userFullName ?? ""
+                      editing ? form.userFullName : (user?.userFullName ?? "")
                     }
                     onChange={(event) =>
                       setForm((current) => ({
@@ -315,11 +286,7 @@ export default function ProfilePage() {
                     }
                     readOnly={!editing}
                     disabled={!editing || saving}
-                    placeholder={
-                      loading
-                        ? "กำลังโหลด..."
-                        : "ไม่มีข้อมูล"
-                    }
+                    placeholder={loading ? "กำลังโหลด..." : "ไม่มีข้อมูล"}
                     className="h-12 w-full rounded-lg border border-border bg-surface-muted pl-11 pr-4 text-sm text-text-secondary"
                   />
                 </div>
@@ -342,11 +309,7 @@ export default function ProfilePage() {
                     value={user?.userEmail ?? ""}
                     readOnly
                     disabled
-                    placeholder={
-                      loading
-                        ? "กำลังโหลด..."
-                        : "ไม่มีข้อมูล"
-                    }
+                    placeholder={loading ? "กำลังโหลด..." : "ไม่มีข้อมูล"}
                     className="h-12 w-full rounded-lg border border-border bg-surface-muted pl-11 pr-4 text-sm text-text-secondary"
                   />
                 </div>
@@ -369,7 +332,7 @@ export default function ProfilePage() {
                     value={
                       editing
                         ? form.userPhoneNumber
-                        : user?.userPhoneNumber ?? ""
+                        : (user?.userPhoneNumber ?? "")
                     }
                     onChange={(event) => {
                       const sanitized = event.target.value
@@ -405,11 +368,7 @@ export default function ProfilePage() {
                   <input
                     id="profile-line"
                     type="text"
-                    value={
-                      editing
-                        ? form.userLineId
-                        : user?.userLineId ?? ""
-                    }
+                    value={editing ? form.userLineId : (user?.userLineId ?? "")}
                     onChange={(event) =>
                       setForm((current) => ({
                         ...current,

@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  type FormEvent,
-  useState,
-} from "react";
+import { type FormEvent, useState } from "react";
 import Image from "next/image";
 import {
   Archive,
@@ -40,14 +37,10 @@ import {
 import { type Category } from "@/types/category";
 import { type TransactionItemListItem } from "@/types/transaction-item";
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 function getImageUrl(path: string) {
-  if (
-    path.startsWith("http://") ||
-    path.startsWith("https://")
-  ) {
+  if (path.startsWith("http://") || path.startsWith("https://")) {
     return path;
   }
 
@@ -61,19 +54,14 @@ function formatDate(value: string) {
     return value;
   }
 
-  return new Intl.DateTimeFormat(
-    "th-TH",
-    {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    },
-  ).format(date);
+  return new Intl.DateTimeFormat("th-TH", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(date);
 }
 
-function getCentralStatusLabel(
-  status: CentralStatus,
-) {
+function getCentralStatusLabel(status: CentralStatus) {
   switch (status) {
     case "PENDING":
       return "รอดำเนินการ";
@@ -103,22 +91,12 @@ export interface StorageInventoryModalProps {
   status: CentralStatus | "";
   onPageChange: (page: number) => void;
   onSearch: (keyword: string) => void;
-  onCategoryChange: (
-    categoryId: string,
-  ) => void;
-  onStatusChange: (
-    status: CentralStatus | "",
-  ) => void;
+  onCategoryChange: (categoryId: string) => void;
+  onStatusChange: (status: CentralStatus | "") => void;
   onClose: () => void;
-  onView: (
-    item: TransactionItemListItem,
-  ) => void;
-  onEdit: (
-    item: TransactionItemListItem,
-  ) => void;
-  onReturn: (
-    item: TransactionItemListItem,
-  ) => void;
+  onView: (item: TransactionItemListItem) => void;
+  onEdit: (item: TransactionItemListItem) => void;
+  onReturn: (item: TransactionItemListItem) => void;
 }
 
 export function StorageInventoryModal({
@@ -145,18 +123,11 @@ export function StorageInventoryModal({
   onEdit,
   onReturn,
 }: StorageInventoryModalProps) {
-  const selectedCategoryName =
-    categories.find(
-      (category) =>
-        String(category.categoryId) ===
-        categoryId,
-    )?.categoryName;
+  const selectedCategoryName = categories.find(
+    (category) => String(category.categoryId) === categoryId,
+  )?.categoryName;
 
-  const hasActiveFilters = Boolean(
-    appliedKeyword ||
-      categoryId ||
-      status,
-  );
+  const hasActiveFilters = Boolean(appliedKeyword || categoryId || status);
 
   if (!open) {
     return null;
@@ -184,7 +155,8 @@ export function StorageInventoryModal({
               </div>
 
               <p className="mt-1 text-sm text-text-secondary">
-                ตรวจสอบ ค้นหา และจัดการสิ่งของที่จัดเก็บอยู่ในคลังกลาง มหาวิทยาลัยราชภัฏบุรีรัมย์
+                ตรวจสอบ ค้นหา และจัดการสิ่งของที่จัดเก็บอยู่ในคลังกลาง
+                มหาวิทยาลัยราชภัฏบุรีรัมย์
               </p>
             </div>
           </div>
@@ -269,9 +241,7 @@ export function StorageInventoryModal({
               <article className="rounded-xl bg-surface p-5">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-sm text-text-secondary">
-                      ส่งคืนสำเร็จ
-                    </p>
+                    <p className="text-sm text-text-secondary">ส่งคืนสำเร็จ</p>
                     <div className="mt-2 flex items-end gap-2">
                       <span className="text-4xl font-bold text-green-500">
                         {statsLoading
@@ -294,12 +264,8 @@ export function StorageInventoryModal({
             </section>
 
             {statsError ? (
-              <p
-                role="alert"
-                className="text-sm text-danger"
-              >
-                ไม่สามารถโหลดสถิติคลังกลาง:{" "}
-                {statsError}
+              <p role="alert" className="text-sm text-danger">
+                ไม่สามารถโหลดสถิติคลังกลาง: {statsError}
               </p>
             ) : null}
 
@@ -310,18 +276,9 @@ export function StorageInventoryModal({
                   onSubmit={(event) => {
                     event.preventDefault();
 
-                    const formData =
-                      new FormData(
-                        event.currentTarget,
-                      );
+                    const formData = new FormData(event.currentTarget);
 
-                    onSearch(
-                      String(
-                        formData.get(
-                          "keyword",
-                        ) ?? "",
-                      ),
-                    );
+                    onSearch(String(formData.get("keyword") ?? ""));
                   }}
                   className="flex h-11 items-center gap-3 rounded-lg bg-surface-muted px-4"
                 >
@@ -340,15 +297,8 @@ export function StorageInventoryModal({
 
                 <select
                   value={categoryId}
-                  onChange={(event) =>
-                    onCategoryChange(
-                      event.target.value,
-                    )
-                  }
-                  disabled={
-                    listLoading ||
-                    categories.length === 0
-                  }
+                  onChange={(event) => onCategoryChange(event.target.value)}
+                  disabled={listLoading || categories.length === 0}
                   className="h-11 rounded-lg border border-border bg-surface-muted px-3 text-sm text-foreground disabled:opacity-70"
                 >
                   <option value="">
@@ -357,45 +307,29 @@ export function StorageInventoryModal({
                       : "ทุกหมวดหมู่"}
                   </option>
 
-                  {categories.map(
-                    (category) => (
-                      <option
-                        key={category.categoryId}
-                        value={category.categoryId}
-                      >
-                        {category.categoryName}
-                      </option>
-                    ),
-                  )}
+                  {categories.map((category) => (
+                    <option
+                      key={category.categoryId}
+                      value={category.categoryId}
+                    >
+                      {category.categoryName}
+                    </option>
+                  ))}
                 </select>
 
                 <select
                   value={status}
                   onChange={(event) =>
-                    onStatusChange(
-                      event.target.value as
-                        | CentralStatus
-                        | "",
-                    )
+                    onStatusChange(event.target.value as CentralStatus | "")
                   }
                   disabled={listLoading}
                   className="h-11 rounded-lg border border-border bg-surface-muted px-3 text-sm text-foreground disabled:opacity-70"
                 >
-                  <option value="">
-                    สถานะ: ทั้งหมด
-                  </option>
-                  <option value="PENDING">
-                    รอดำเนินการ
-                  </option>
-                  <option value="FOUNDED">
-                    พบสิ่งของ
-                  </option>
-                  <option value="IN_CENTER">
-                    อยู่ในคลังกลาง
-                  </option>
-                  <option value="RETURNED">
-                    ส่งคืนแล้ว
-                  </option>
+                  <option value="">สถานะ: ทั้งหมด</option>
+                  <option value="PENDING">รอดำเนินการ</option>
+                  <option value="FOUNDED">พบสิ่งของ</option>
+                  <option value="IN_CENTER">อยู่ในคลังกลาง</option>
+                  <option value="RETURNED">ส่งคืนแล้ว</option>
                 </select>
 
                 <select
@@ -417,34 +351,23 @@ export function StorageInventoryModal({
 
                 {categoryId ? (
                   <span className="rounded-md bg-brand-purple/10 px-2.5 py-1 font-medium text-brand-purple">
-                    หมวดหมู่:{" "}
-                    {selectedCategoryName ??
-                      categoryId}
+                    หมวดหมู่: {selectedCategoryName ?? categoryId}
                   </span>
                 ) : null}
 
                 {status ? (
                   <span className="rounded-md bg-brand-purple/10 px-2.5 py-1 font-medium text-brand-purple">
-                    สถานะ:{" "}
-                    {getCentralStatusLabel(
-                      status,
-                    )}
+                    สถานะ: {getCentralStatusLabel(status)}
                   </span>
                 ) : null}
 
-                {!hasActiveFilters ? (
-                  <span>ยังไม่มี</span>
-                ) : null}
+                {!hasActiveFilters ? <span>ยังไม่มี</span> : null}
               </div>
             </section>
 
             {listError ? (
-              <p
-                role="alert"
-                className="text-sm text-danger"
-              >
-                ไม่สามารถโหลดรายการคลังกลาง:{" "}
-                {listError}
+              <p role="alert" className="text-sm text-danger">
+                ไม่สามารถโหลดรายการคลังกลาง: {listError}
               </p>
             ) : null}
 
@@ -454,50 +377,27 @@ export function StorageInventoryModal({
                 <table className="w-full min-w-[1050px] text-left">
                   <thead className="bg-surface-muted text-xs font-semibold text-text-secondary">
                     <tr>
-                      <th className="px-5 py-4">
-                        รหัสอ้างอิง
-                      </th>
-                      <th className="px-5 py-4">
-                        สิ่งของ & ลักษณะเด่น
-                      </th>
-                      <th className="px-5 py-4">
-                        หมวดหมู่ & ตำแหน่งคลัง
-                      </th>
-                      <th className="px-5 py-4">
-                        วันเวลาที่รับเข้า
-                      </th>
-                      <th className="px-5 py-4">
-                        ผู้นำส่ง / ผู้รับฝาก
-                      </th>
-                      <th className="px-5 py-4 text-center">
-                        สถานะ
-                      </th>
-                      <th className="px-5 py-4 text-center">
-                        จัดการ
-                      </th>
+                      <th className="px-5 py-4">รหัสอ้างอิง</th>
+                      <th className="px-5 py-4">สิ่งของ & ลักษณะเด่น</th>
+                      <th className="px-5 py-4">หมวดหมู่ & ตำแหน่งคลัง</th>
+                      <th className="px-5 py-4">วันเวลาที่รับเข้า</th>
+                      <th className="px-5 py-4">ผู้นำส่ง / ผู้รับฝาก</th>
+                      <th className="px-5 py-4 text-center">สถานะ</th>
+                      <th className="px-5 py-4 text-center">จัดการ</th>
                     </tr>
                   </thead>
 
                   <tbody className="divide-y divide-border">
                     {items.map((item) => {
-                      const thumbnail =
-                        item.imageUrl[0]
-                          ? getImageUrl(
-                              item.imageUrl[0],
-                            )
-                          : null;
+                      const thumbnail = item.imageUrl[0]
+                        ? getImageUrl(item.imageUrl[0])
+                        : null;
 
                       return (
-                        <tr
-                          key={
-                            item.transactionItemId
-                          }
-                          className="text-sm"
-                        >
+                        <tr key={item.transactionItemId} className="text-sm">
                           <td className="px-5 py-5">
                             <span className="whitespace-nowrap rounded-md bg-brand-purple/10 px-2.5 py-1 font-bold text-brand-purple">
-                              {item.transactionItemReferenceTag ??
-                                "—"}
+                              {item.transactionItemReferenceTag ?? "—"}
                             </span>
                           </td>
 
@@ -507,9 +407,7 @@ export function StorageInventoryModal({
                                 {thumbnail ? (
                                   <Image
                                     src={thumbnail}
-                                    alt={
-                                      item.transactionItemsName
-                                    }
+                                    alt={item.transactionItemsName}
                                     width={70}
                                     height={70}
                                     className="size-14 object-cover"
@@ -534,28 +432,21 @@ export function StorageInventoryModal({
 
                           <td className="px-5 py-5">
                             <p className="font-medium text-foreground">
-                              {item.categories
-                                ?.categoryName ??
-                                "—"}
+                              {item.categories?.categoryName ?? "—"}
                             </p>
 
                             <p className="mt-1 text-xs text-text-secondary">
-                              {item.location
-                                ?.locationName ??
-                                "—"}
+                              {item.location?.locationName ?? "—"}
                             </p>
                           </td>
 
                           <td className="px-5 py-5 text-text-secondary">
-                            {formatDate(
-                              item.transactionItemsDate,
-                            )}
+                            {formatDate(item.transactionItemsDate)}
                           </td>
 
                           <td className="px-5 py-5">
                             <p className="font-medium text-foreground">
-                              {item.users?.userName ??
-                                "—"}
+                              {item.users?.userName ?? "—"}
                             </p>
 
                             <p className="mt-1 text-xs text-text-secondary">
@@ -566,9 +457,7 @@ export function StorageInventoryModal({
                           <td className="px-5 py-5 text-center">
                             {item.currentStatus ? (
                               <span className="inline-flex whitespace-nowrap rounded-full bg-brand-purple/10 px-2.5 py-1 text-xs font-semibold text-brand-purple">
-                                {getCentralStatusLabel(
-                                  item.currentStatus,
-                                )}
+                                {getCentralStatusLabel(item.currentStatus)}
                               </span>
                             ) : (
                               <span className="text-xs text-text-secondary">
@@ -581,9 +470,7 @@ export function StorageInventoryModal({
                             <div className="flex items-center justify-center gap-2">
                               <button
                                 type="button"
-                                onClick={() =>
-                                  onView(item)
-                                }
+                                onClick={() => onView(item)}
                                 className="flex size-8 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-surface-muted hover:text-brand-purple"
                                 aria-label="ดูรายละเอียด"
                               >
@@ -592,22 +479,17 @@ export function StorageInventoryModal({
 
                               <button
                                 type="button"
-                                onClick={() =>
-                                  onEdit(item)
-                                }
+                                onClick={() => onEdit(item)}
                                 className="flex size-8 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-surface-muted hover:text-brand-purple"
                                 aria-label="แก้ไข"
                               >
                                 <Pencil className="size-4" />
                               </button>
 
-                              {item.currentStatus ===
-                              "IN_CENTER" ? (
+                              {item.currentStatus === "IN_CENTER" ? (
                                 <button
                                   type="button"
-                                  onClick={() =>
-                                    onReturn(item)
-                                  }
+                                  onClick={() => onReturn(item)}
                                   className="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md bg-brand-purple px-3 text-xs font-semibold text-white transition-colors hover:bg-brand-purple-hover"
                                 >
                                   ส่งคืน
@@ -629,17 +511,13 @@ export function StorageInventoryModal({
                 </div>
               ) : null}
 
-              {!listLoading &&
-              !listError &&
-              items.length === 0 ? (
+              {!listLoading && !listError && items.length === 0 ? (
                 <div className="px-6 py-16 text-center text-sm text-text-secondary">
                   ไม่พบรายการสิ่งของ
                 </div>
               ) : null}
 
-              {!listLoading &&
-              !listError &&
-              totalElements > 0 ? (
+              {!listLoading && !listError && totalElements > 0 ? (
                 <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border px-5 py-4">
                   <p className="text-sm text-text-secondary">
                     ทั้งหมด{" "}
@@ -653,30 +531,20 @@ export function StorageInventoryModal({
                     <button
                       type="button"
                       disabled={page <= 0}
-                      onClick={() =>
-                        onPageChange(page - 1)
-                      }
+                      onClick={() => onPageChange(page - 1)}
                       className="h-9 rounded-lg border border-border px-4 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       ก่อนหน้า
                     </button>
 
                     <span className="min-w-24 text-center text-sm text-text-secondary">
-                      หน้า {page + 1} /{" "}
-                      {Math.max(
-                        totalPages,
-                        1,
-                      )}
+                      หน้า {page + 1} / {Math.max(totalPages, 1)}
                     </span>
 
                     <button
                       type="button"
-                      disabled={
-                        page + 1 >= totalPages
-                      }
-                      onClick={() =>
-                        onPageChange(page + 1)
-                      }
+                      disabled={page + 1 >= totalPages}
+                      onClick={() => onPageChange(page + 1)}
                       className="h-9 rounded-lg border border-border px-4 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       ถัดไป
@@ -697,20 +565,12 @@ export interface StorageDetailModalProps {
   onClose: () => void;
 }
 
-export function StorageDetailModal({
-  item,
-  onClose,
-}: StorageDetailModalProps) {
-  const mainImage = item.imageUrl[0]
-    ? getImageUrl(item.imageUrl[0])
-    : null;
+export function StorageDetailModal({ item, onClose }: StorageDetailModalProps) {
+  const mainImage = item.imageUrl[0] ? getImageUrl(item.imageUrl[0]) : null;
 
-  const contactName =
-    item.users?.userName ??
-    "เจ้าหน้าที่จุดรับฝากกลาง";
+  const contactName = item.users?.userName ?? "เจ้าหน้าที่จุดรับฝากกลาง";
 
-  const contactPhone =
-    item.users?.userPhoneNumber;
+  const contactPhone = item.users?.userPhoneNumber;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
@@ -742,18 +602,16 @@ export function StorageDetailModal({
 
           {item.imageUrl.length > 1 ? (
             <div className="mt-4 flex gap-3 overflow-x-auto">
-              {item.imageUrl
-                .slice(0, 5)
-                .map((image) => (
-                  <Image
-                    key={image}
-                    src={getImageUrl(image)}
-                    alt=""
-                    width={110}
-                    height={86}
-                    className="h-20 w-24 shrink-0 rounded-lg border border-border object-cover"
-                  />
-                ))}
+              {item.imageUrl.slice(0, 5).map((image) => (
+                <Image
+                  key={image}
+                  src={getImageUrl(image)}
+                  alt=""
+                  width={110}
+                  height={86}
+                  className="h-20 w-24 shrink-0 rounded-lg border border-border object-cover"
+                />
+              ))}
             </div>
           ) : null}
         </section>
@@ -768,8 +626,7 @@ export function StorageDetailModal({
                 </h2>
 
                 <p className="mt-1 text-xl font-semibold text-text-secondary">
-                  {item.transactionItemReferenceTag ??
-                    "ไม่มีรหัสอ้างอิง"}
+                  {item.transactionItemReferenceTag ?? "ไม่มีรหัสอ้างอิง"}
                 </p>
               </div>
 
@@ -794,9 +651,7 @@ export function StorageDetailModal({
                     วันที่พบ / รับเข้า
                   </p>
                   <p className="mt-1 font-medium text-foreground">
-                    {formatDate(
-                      item.transactionItemsDate,
-                    )}
+                    {formatDate(item.transactionItemsDate)}
                   </p>
                 </div>
               </div>
@@ -806,12 +661,9 @@ export function StorageDetailModal({
                   <MapPin className="size-5 text-brand-purple" />
                 </div>
                 <div>
-                  <p className="text-xs text-text-secondary">
-                    สถานที่พบ
-                  </p>
+                  <p className="text-xs text-text-secondary">สถานที่พบ</p>
                   <p className="mt-1 font-medium text-foreground">
-                    {item.location?.locationName ??
-                      "—"}
+                    {item.location?.locationName ?? "—"}
                   </p>
                 </div>
               </div>
@@ -821,12 +673,9 @@ export function StorageDetailModal({
                   <Package className="size-5 text-brand-purple" />
                 </div>
                 <div>
-                  <p className="text-xs text-text-secondary">
-                    หมวดหมู่
-                  </p>
+                  <p className="text-xs text-text-secondary">หมวดหมู่</p>
                   <p className="mt-1 font-medium text-foreground">
-                    {item.categories?.categoryName ??
-                      "—"}
+                    {item.categories?.categoryName ?? "—"}
                   </p>
                 </div>
               </div>
@@ -839,15 +688,12 @@ export function StorageDetailModal({
             </h3>
 
             <div className="mt-4 rounded-lg bg-surface-muted p-4">
-              <p className="text-xs text-text-secondary">
-                สถานะปัจจุบัน
-              </p>
+              <p className="text-xs text-text-secondary">สถานะปัจจุบัน</p>
 
               <div className="mt-2 flex items-center gap-2 font-semibold text-brand-purple">
                 <Warehouse className="size-4" />
                 <span>
-                  {item.location
-                    ?.centralStationName ??
+                  {item.location?.centralStationName ??
                     "ฝากไว้ที่จุดรับฝากกลาง"}
                 </span>
               </div>
@@ -859,13 +705,10 @@ export function StorageDetailModal({
               </div>
 
               <div className="min-w-0">
-                <p className="font-semibold text-foreground">
-                  {contactName}
-                </p>
+                <p className="font-semibold text-foreground">{contactName}</p>
 
                 <p className="mt-1 text-sm text-text-secondary">
-                  {contactPhone ??
-                    "ยังไม่มีข้อมูลเบอร์โทร"}
+                  {contactPhone ?? "ยังไม่มีข้อมูลเบอร์โทร"}
                 </p>
               </div>
             </div>
@@ -888,9 +731,7 @@ export function StorageDetailModal({
 export interface StorageEditModalProps {
   item: TransactionItemListItem;
   onClose: () => void;
-  onSaved: (
-    item: TransactionItemListItem,
-  ) => void;
+  onSaved: (item: TransactionItemListItem) => void;
 }
 
 export function StorageEditModal({
@@ -898,31 +739,21 @@ export function StorageEditModal({
   onClose,
   onSaved,
 }: StorageEditModalProps) {
-  const [name, setName] = useState(
-    item.transactionItemsName,
-  );
+  const [name, setName] = useState(item.transactionItemsName);
 
   const [details, setDetails] = useState(
-    item.transactionItemsLocationDetails ??
-      "",
+    item.transactionItemsLocationDetails ?? "",
   );
 
-  const [saving, setSaving] =
-    useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const [error, setError] = useState<
-    string | null
-  >(null);
+  const [error, setError] = useState<string | null>(null);
 
-  async function handleSubmit(
-    event: FormEvent<HTMLFormElement>,
-  ) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!name.trim()) {
-      setError(
-        "กรุณากรอกชื่อสิ่งของ",
-      );
+      setError("กรุณากรอกชื่อสิ่งของ");
       return;
     }
 
@@ -930,12 +761,9 @@ export function StorageEditModal({
     setError(null);
 
     try {
-      if (
-        item.transactionItemId >= 0
-      ) {
+      if (item.transactionItemId >= 0) {
         await updateCentralItemBasic({
-          itemId:
-            item.transactionItemId,
+          itemId: item.transactionItemId,
           itemName: name,
           itemDetails: details,
         });
@@ -943,18 +771,14 @@ export function StorageEditModal({
 
       onSaved({
         ...item,
-        transactionItemsName:
-          name.trim(),
-        transactionItemsLocationDetails:
-          details.trim(),
+        transactionItemsName: name.trim(),
+        transactionItemsLocationDetails: details.trim(),
       });
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
       } else {
-        setError(
-          "ไม่สามารถบันทึกการแก้ไขได้",
-        );
+        setError("ไม่สามารถบันทึกการแก้ไขได้");
       }
     } finally {
       setSaving(false);
@@ -1010,8 +834,7 @@ export function StorageEditModal({
                 </h2>
 
                 <span className="rounded-md bg-brand-purple/10 px-2 py-1 text-xs font-semibold text-brand-purple">
-                  {item.transactionItemReferenceTag ??
-                    "ไม่มีรหัสอ้างอิง"}
+                  {item.transactionItemReferenceTag ?? "ไม่มีรหัสอ้างอิง"}
                 </span>
 
                 <span className="rounded-md bg-brand-yellow/40 px-2 py-1 text-xs font-medium text-foreground">
@@ -1057,30 +880,27 @@ export function StorageEditModal({
                 </div>
 
                 <div className="grid grid-cols-4 gap-2">
-                  {item.imageUrl
-                    .slice(0, 3)
-                    .map((image, index) => (
-                      <div
-                        key={image}
-                        className="relative aspect-[4/3] overflow-hidden rounded-lg bg-surface-muted"
-                      >
-                        <Image
-                          src={getImageUrl(image)}
-                          alt={`รูปที่ ${index + 1}`}
-                          fill
-                          className="object-cover"
-                        />
+                  {item.imageUrl.slice(0, 3).map((image, index) => (
+                    <div
+                      key={image}
+                      className="relative aspect-[4/3] overflow-hidden rounded-lg bg-surface-muted"
+                    >
+                      <Image
+                        src={getImageUrl(image)}
+                        alt={`รูปที่ ${index + 1}`}
+                        fill
+                        className="object-cover"
+                      />
 
-                        {index === 0 ? (
-                          <span className="absolute left-1 top-1 rounded bg-brand-purple px-1.5 py-0.5 text-[10px] font-semibold text-white">
-                            รูปหลัก
-                          </span>
-                        ) : null}
-                      </div>
-                    ))}
+                      {index === 0 ? (
+                        <span className="absolute left-1 top-1 rounded bg-brand-purple px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                          รูปหลัก
+                        </span>
+                      ) : null}
+                    </div>
+                  ))}
 
-                  {item.imageUrl.length ===
-                  0 ? (
+                  {item.imageUrl.length === 0 ? (
                     <>
                       <div className="flex aspect-[4/3] items-center justify-center rounded-lg bg-surface-muted">
                         <ImageIcon className="size-5 text-text-secondary/40" />
@@ -1101,9 +921,7 @@ export function StorageEditModal({
                     className="flex aspect-[4/3] flex-col items-center justify-center rounded-lg border border-dashed border-brand-purple/30 bg-surface-muted text-brand-purple opacity-60"
                   >
                     <ImagePlus className="size-5" />
-                    <span className="mt-1 text-xs font-semibold">
-                      เพิ่มรูป
-                    </span>
+                    <span className="mt-1 text-xs font-semibold">เพิ่มรูป</span>
                   </button>
                 </div>
               </section>
@@ -1119,17 +937,13 @@ export function StorageEditModal({
 
                 <label className="block text-xs font-medium text-text-secondary">
                   ชื่อสิ่งของ / ยี่ห้อ
-                  <span className="ml-1 text-danger">
-                    *
-                  </span>
+                  <span className="ml-1 text-danger">*</span>
                 </label>
 
                 <input
                   value={name}
                   onChange={(event) => {
-                    setName(
-                      event.target.value,
-                    );
+                    setName(event.target.value);
                     setError(null);
                   }}
                   className="mt-1.5 h-10 w-full rounded-lg border border-border bg-surface-muted px-3 text-sm outline-none focus:border-brand-purple"
@@ -1145,9 +959,7 @@ export function StorageEditModal({
                       title="ยังไม่รองรับการแก้ไขผ่าน API"
                       className="mt-1.5 flex h-10 items-center rounded-lg bg-surface-muted px-3 text-sm cursor-not-allowed opacity-80"
                     >
-                      {item.categories
-                        ?.categoryName ??
-                        "—"}
+                      {item.categories?.categoryName ?? "—"}
                     </div>
                   </div>
 
@@ -1167,18 +979,14 @@ export function StorageEditModal({
 
                 <label className="mt-4 block text-xs font-medium text-text-secondary">
                   ลักษณะเด่น / สภาพตำหนิเฉพาะ
-                  <span className="ml-1 text-danger">
-                    *
-                  </span>
+                  <span className="ml-1 text-danger">*</span>
                 </label>
 
                 <textarea
                   rows={4}
                   value={details}
                   onChange={(event) => {
-                    setDetails(
-                      event.target.value,
-                    );
+                    setDetails(event.target.value);
                     setError(null);
                   }}
                   className="mt-1.5 w-full resize-none rounded-lg border border-border bg-surface-muted p-3 text-sm outline-none focus:border-brand-purple"
@@ -1207,8 +1015,7 @@ export function StorageEditModal({
                       className="mt-1.5 flex h-10 items-center gap-2 rounded-lg bg-surface-muted px-3 text-sm cursor-not-allowed opacity-80"
                     >
                       <UserRound className="size-4 text-text-secondary" />
-                      {item.users?.userName ??
-                        "ไม่มีข้อมูล"}
+                      {item.users?.userName ?? "ไม่มีข้อมูล"}
                     </div>
                   </div>
 
@@ -1221,9 +1028,7 @@ export function StorageEditModal({
                       className="mt-1.5 flex h-10 items-center gap-2 rounded-lg bg-surface-muted px-3 text-sm cursor-not-allowed opacity-80"
                     >
                       <Phone className="size-4 text-text-secondary" />
-                      {item.users
-                        ?.userPhoneNumber ??
-                        "ไม่มีข้อมูล"}
+                      {item.users?.userPhoneNumber ?? "ไม่มีข้อมูล"}
                     </div>
                   </div>
 
@@ -1236,9 +1041,7 @@ export function StorageEditModal({
                       className="mt-1.5 flex h-10 items-center gap-2 rounded-lg bg-surface-muted px-3 text-sm cursor-not-allowed opacity-80"
                     >
                       <Building2 className="size-4 text-text-secondary" />
-                      {item.location
-                        ?.locationName ??
-                        "—"}
+                      {item.location?.locationName ?? "—"}
                     </div>
                   </div>
 
@@ -1278,16 +1081,31 @@ export function StorageEditModal({
                 <div className="mt-2 grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={item.transactionItemsStorageType === "SELF" && item.transactionItemsPostType === "FOUND" ? handleHandover : undefined}
-                    disabled={saving || (item.transactionItemsStorageType === "SELF" && item.transactionItemsPostType !== "FOUND")}
+                    onClick={
+                      item.transactionItemsStorageType === "SELF" &&
+                      item.transactionItemsPostType === "FOUND"
+                        ? handleHandover
+                        : undefined
+                    }
+                    disabled={
+                      saving ||
+                      (item.transactionItemsStorageType === "SELF" &&
+                        item.transactionItemsPostType !== "FOUND")
+                    }
                     className={
                       item.transactionItemsStorageType === "CENTRAL"
                         ? "flex h-10 items-center justify-center gap-2 rounded-lg bg-brand-purple/15 text-sm font-semibold text-brand-purple"
-                        : (item.transactionItemsStorageType === "SELF" && item.transactionItemsPostType === "FOUND")
-                        ? "flex h-10 items-center justify-center gap-2 rounded-lg border border-border bg-surface text-sm text-foreground hover:bg-surface-muted hover:text-brand-purple transition-colors disabled:opacity-50"
-                        : "flex h-10 items-center justify-center gap-2 rounded-lg bg-surface-muted text-sm text-text-secondary cursor-not-allowed opacity-80"
+                        : item.transactionItemsStorageType === "SELF" &&
+                            item.transactionItemsPostType === "FOUND"
+                          ? "flex h-10 items-center justify-center gap-2 rounded-lg border border-border bg-surface text-sm text-foreground hover:bg-surface-muted hover:text-brand-purple transition-colors disabled:opacity-50"
+                          : "flex h-10 items-center justify-center gap-2 rounded-lg bg-surface-muted text-sm text-text-secondary cursor-not-allowed opacity-80"
                     }
-                    title={item.transactionItemsStorageType === "SELF" && item.transactionItemsPostType === "FOUND" ? "คลิกเพื่อนำของเข้าจุดรับฝากกลาง" : undefined}
+                    title={
+                      item.transactionItemsStorageType === "SELF" &&
+                      item.transactionItemsPostType === "FOUND"
+                        ? "คลิกเพื่อนำของเข้าจุดรับฝากกลาง"
+                        : undefined
+                    }
                   >
                     <Warehouse className="size-4" />
                     จุดรับฝากกลาง
@@ -1305,17 +1123,13 @@ export function StorageEditModal({
                 </div>
 
                 <div className="mt-4">
-                  <p className="text-xs text-text-secondary">
-                    ตำแหน่ง / อาคาร
-                  </p>
+                  <p className="text-xs text-text-secondary">ตำแหน่ง / อาคาร</p>
 
                   <div
                     title="ยังไม่รองรับการแก้ไขผ่าน API"
                     className="mt-1.5 flex h-10 items-center rounded-lg bg-surface-muted px-3 text-sm cursor-not-allowed opacity-80"
                   >
-                    {item.location
-                      ?.locationName ??
-                      "—"}
+                    {item.location?.locationName ?? "—"}
                   </div>
                 </div>
               </section>
@@ -1329,14 +1143,13 @@ export function StorageEditModal({
                   </h3>
                 </div>
 
-                <p className="text-xs text-text-secondary">
-                  สถานะขั้นตอน
-                </p>
+                <p className="text-xs text-text-secondary">สถานะขั้นตอน</p>
 
                 <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
                   <div
                     className={
-                      item.currentStatus === "PENDING" || item.currentStatus === "FOUNDED"
+                      item.currentStatus === "PENDING" ||
+                      item.currentStatus === "FOUNDED"
                         ? "flex min-h-10 items-center justify-center rounded-lg bg-brand-yellow/40 px-2 text-center font-semibold"
                         : "flex min-h-10 items-center justify-center rounded-lg bg-surface-muted px-2 text-center text-text-secondary"
                     }
@@ -1429,15 +1242,11 @@ export function StorageEditModal({
 
             <button
               type="submit"
-              disabled={
-                saving || !name.trim()
-              }
+              disabled={saving || !name.trim()}
               className="inline-flex h-10 items-center gap-2 rounded-lg bg-brand-purple px-5 text-sm font-semibold text-white disabled:opacity-50"
             >
               <Save className="size-4" />
-              {saving
-                ? "กำลังบันทึก..."
-                : "บันทึกการแก้ไข"}
+              {saving ? "กำลังบันทึก..." : "บันทึกการแก้ไข"}
             </button>
           </div>
         </footer>

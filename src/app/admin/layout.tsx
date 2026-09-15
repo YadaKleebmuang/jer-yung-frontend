@@ -6,12 +6,6 @@ export interface AdminLayoutProps {
   children: ReactNode;
 }
 
-export default function AdminLayout({
-  children,
-}: AdminLayoutProps) {
-  return (
-    <AdminAccessShell>
-      {children}
-    </AdminAccessShell>
-  );
+export default function AdminLayout({ children }: AdminLayoutProps) {
+  return <AdminAccessShell>{children}</AdminAccessShell>;
 }
