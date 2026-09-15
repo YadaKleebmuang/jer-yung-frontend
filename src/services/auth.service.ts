@@ -27,6 +27,12 @@ export function login(payload: LoginRequest) {
   );
 }
 
+export function logout() {
+  return apiClient.post<unknown>(
+    "/api/auth/users/logout",
+  );
+}
+
 export interface RegisterRequest {
   userEmail: string;
   userPassword: string;

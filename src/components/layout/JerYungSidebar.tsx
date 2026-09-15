@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { Brand } from "@/components/shared/Brand";
 import { SidebarNav } from "@/components/layout/SidebarNav";
@@ -7,20 +9,49 @@ import {
   navigationByRole,
   type UserRole,
 } from "@/lib/navigation";
+import {
+  AUTH_ROLE_STORAGE_KEY,
+} from "@/lib/auth-session";
 import { cn } from "@/lib/utils";
+import {
+  logout,
+} from "@/services/auth.service";
 
 export interface JerYungSidebarProps {
   role: UserRole;
-  onLogout?: () => void;
   className?: string;
 }
 
 export function JerYungSidebar({
   role,
-  onLogout,
   className,
 }: JerYungSidebarProps) {
+  const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] =
+    useState(false);
+
   const items = navigationByRole[role];
+
+  async function handleLogout() {
+    if (isLoggingOut) {
+      return;
+    }
+
+    setIsLoggingOut(true);
+
+    try {
+      await logout();
+
+      window.localStorage.removeItem(
+        AUTH_ROLE_STORAGE_KEY,
+      );
+
+      router.replace("/login");
+      router.refresh();
+    } catch {
+      setIsLoggingOut(false);
+    }
+  }
 
   return (
     <div
@@ -36,8 +67,8 @@ export function JerYungSidebar({
       <div className="mt-auto border-t border-border pt-4">
         <button
           type="button"
-          onClick={onLogout}
-          disabled={!onLogout}
+          onClick={handleLogout}
+          disabled={isLoggingOut}
           className={cn(
             "flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2",
             "text-sm font-medium text-text-secondary",
@@ -52,7 +83,11 @@ export function JerYungSidebar({
             aria-hidden="true"
           />
 
-          <span>ออกจากระบบ</span>
+          <span>
+            {isLoggingOut
+              ? "กำลังออกจากระบบ..."
+              : "ออกจากระบบ"}
+          </span>
         </button>
       </div>
     </div>
