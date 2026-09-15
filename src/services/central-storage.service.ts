@@ -103,25 +103,31 @@ export function checkoutCentralItem({
 
 export interface UpdateCentralItemBasicParams {
   itemId: number;
-  itemName: string;
-  itemDetails: string;
+  itemName?: string;
+  itemDetails?: string;
+  categoryId?: number;
+  locationId?: number;
+  storageType?: string;
+  currentStatus?: string;
 }
 
 export function updateCentralItemBasic({
   itemId,
   itemName,
   itemDetails,
+  categoryId,
+  locationId,
+  storageType,
+  currentStatus,
 }: UpdateCentralItemBasicParams) {
   const formData = new FormData();
 
-  formData.append(
-    "itemName",
-    itemName.trim(),
-  );
-  formData.append(
-    "itemDetails",
-    itemDetails.trim(),
-  );
+  if (itemName) formData.append("itemName", itemName.trim());
+  if (itemDetails) formData.append("itemDetails", itemDetails.trim());
+  if (categoryId) formData.append("categoryId", String(categoryId));
+  if (locationId) formData.append("locationId", String(locationId));
+  if (storageType) formData.append("storageType", storageType);
+  if (currentStatus) formData.append("currentStatus", currentStatus);
 
   return apiClient.put<ApiResponse<unknown>>(
     `/api/transaction-items/${itemId}`,

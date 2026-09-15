@@ -1,6 +1,10 @@
 "use client";
 
-import { type FormEvent, useState } from "react";
+import {
+  type FormEvent,
+  useState,
+  useEffect,
+} from "react";
 import Image from "next/image";
 import {
   Archive,
@@ -35,7 +39,10 @@ import {
   type CentralStorageStats,
 } from "@/services/central-storage.service";
 import { type Category } from "@/types/category";
+import { type Location } from "@/types/location";
 import { type TransactionItemListItem } from "@/types/transaction-item";
+import { getCategories } from "@/services/category.service";
+import { getLocations } from "@/services/location.service";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
@@ -693,8 +700,11 @@ export function StorageDetailModal({ item, onClose }: StorageDetailModalProps) {
               <div className="mt-2 flex items-center gap-2 font-semibold text-brand-purple">
                 <Warehouse className="size-4" />
                 <span>
-                  {item.location?.centralStationName ??
-                    "ฝากไว้ที่จุดรับฝากกลาง"}
+                  {item.currentStatus === "PENDING" && item.transactionItemsStorageType === "CENTRAL"
+                    ? "ฝากไว้ที่จุดรับฝากกลาง"
+                    : item.currentStatus
+                      ? getCentralStatusLabel(item.currentStatus)
+                      : "ไม่ทราบสถานะ"}
                 </span>
               </div>
             </div>
@@ -708,7 +718,8 @@ export function StorageDetailModal({ item, onClose }: StorageDetailModalProps) {
                 <p className="font-semibold text-foreground">{contactName}</p>
 
                 <p className="mt-1 text-sm text-text-secondary">
-                  {contactPhone ?? "ยังไม่มีข้อมูลเบอร์โทร"}
+                  {item.users?.userPhoneNumber ? `โทร: ${item.users.userPhoneNumber}` : "ไม่มีเบอร์โทร"}
+                  {item.users?.userLineId ? ` | Line: ${item.users.userLineId}` : ""}
                 </p>
               </div>
             </div>
@@ -744,6 +755,35 @@ export function StorageEditModal({
   const [details, setDetails] = useState(
     item.transactionItemsLocationDetails ?? "",
   );
+  
+  const [categoryId, setCategoryId] = useState<number | "">(
+    item.categories?.categoryId ?? ""
+  );
+  const [locationId, setLocationId] = useState<number | "">(
+    item.location?.locationId ?? ""
+  );
+  const [storageType, setStorageType] = useState(
+    item.transactionItemsStorageType ?? ""
+  );
+  const [currentStatus, setCurrentStatus] = useState<string>(
+    item.currentStatus ?? "PENDING"
+  );
+  
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([getCategories(), getLocations()])
+      .then(([cats, locs]) => {
+        if (!cancelled) {
+          setCategories(cats);
+          setLocations(locs);
+        }
+      })
+      .catch(console.error);
+    return () => { cancelled = true; };
+  }, []);
 
   const [saving, setSaving] = useState(false);
 
@@ -766,42 +806,21 @@ export function StorageEditModal({
           itemId: item.transactionItemId,
           itemName: name,
           itemDetails: details,
+          categoryId: categoryId ? Number(categoryId) : undefined,
+          locationId: locationId ? Number(locationId) : undefined,
+          storageType: storageType || undefined,
+          currentStatus: currentStatus || undefined,
         });
       }
 
       onSaved({
         ...item,
-        transactionItemsName: name.trim(),
-        transactionItemsLocationDetails: details.trim(),
-      });
-    } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message);
-      } else {
-        setError("ไม่สามารถบันทึกการแก้ไขได้");
-      }
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function handleHandover() {
-    if (
-      item.transactionItemsPostType !== "FOUND" ||
-      item.transactionItemsStorageType !== "SELF"
-    ) {
-      return;
-    }
-
-    setSaving(true);
-    setError(null);
-
-    try {
-      await handoverToCentral(item.transactionItemId);
-      onSaved({
-        ...item,
-        transactionItemsStorageType: "CENTRAL",
-        currentStatus: "IN_CENTER",
+        transactionItemsName:
+          name.trim(),
+        transactionItemsLocationDetails:
+          details.trim(),
+        transactionItemsStorageType: storageType as any,
+        currentStatus: currentStatus as CentralStatus,
       });
     } catch (err) {
       if (err instanceof ApiError) {
@@ -955,12 +974,18 @@ export function StorageEditModal({
                       หมวดหมู่
                     </label>
 
-                    <div
-                      title="ยังไม่รองรับการแก้ไขผ่าน API"
-                      className="mt-1.5 flex h-10 items-center rounded-lg bg-surface-muted px-3 text-sm cursor-not-allowed opacity-80"
+                    <select
+                      value={categoryId}
+                      onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : "")}
+                      className="mt-1.5 flex h-10 w-full items-center rounded-lg border border-border bg-surface-muted px-3 text-sm outline-none focus:border-brand-purple"
                     >
-                      {item.categories?.categoryName ?? "—"}
-                    </div>
+                      <option value="">ไม่ระบุ</option>
+                      {categories.map((c) => (
+                        <option key={c.categoryId} value={c.categoryId}>
+                          {c.categoryName}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div>
@@ -1081,56 +1106,46 @@ export function StorageEditModal({
                 <div className="mt-2 grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={
-                      item.transactionItemsStorageType === "SELF" &&
-                      item.transactionItemsPostType === "FOUND"
-                        ? handleHandover
-                        : undefined
-                    }
-                    disabled={
-                      saving ||
-                      (item.transactionItemsStorageType === "SELF" &&
-                        item.transactionItemsPostType !== "FOUND")
-                    }
-                    className={
-                      item.transactionItemsStorageType === "CENTRAL"
-                        ? "flex h-10 items-center justify-center gap-2 rounded-lg bg-brand-purple/15 text-sm font-semibold text-brand-purple"
-                        : item.transactionItemsStorageType === "SELF" &&
-                            item.transactionItemsPostType === "FOUND"
-                          ? "flex h-10 items-center justify-center gap-2 rounded-lg border border-border bg-surface text-sm text-foreground hover:bg-surface-muted hover:text-brand-purple transition-colors disabled:opacity-50"
-                          : "flex h-10 items-center justify-center gap-2 rounded-lg bg-surface-muted text-sm text-text-secondary cursor-not-allowed opacity-80"
-                    }
-                    title={
-                      item.transactionItemsStorageType === "SELF" &&
-                      item.transactionItemsPostType === "FOUND"
-                        ? "คลิกเพื่อนำของเข้าจุดรับฝากกลาง"
-                        : undefined
-                    }
+                    onClick={() => setStorageType("CENTRAL")}
+                    className={`flex h-10 items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors ${
+                      storageType === "CENTRAL"
+                        ? "bg-brand-purple/15 text-brand-purple"
+                        : "bg-surface-muted text-text-secondary hover:bg-surface-muted/80"
+                    }`}
                   >
                     <Warehouse className="size-4" />
                     จุดรับฝากกลาง
                   </button>
 
-                  <div
-                    className={
-                      item.transactionItemsStorageType === "SELF"
-                        ? "flex h-10 items-center justify-center rounded-lg bg-brand-purple/15 text-sm font-semibold text-brand-purple"
-                        : "flex h-10 items-center justify-center rounded-lg bg-surface-muted text-sm text-text-secondary"
-                    }
+                  <button
+                    type="button"
+                    onClick={() => setStorageType("SELF")}
+                    className={`flex h-10 items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors ${
+                      storageType === "SELF"
+                        ? "bg-brand-purple/15 text-brand-purple"
+                        : "bg-surface-muted text-text-secondary hover:bg-surface-muted/80"
+                    }`}
                   >
+                    <UserRound className="size-4" />
                     อยู่ที่ตนเอง
-                  </div>
+                  </button>
                 </div>
 
                 <div className="mt-4">
                   <p className="text-xs text-text-secondary">ตำแหน่ง / อาคาร</p>
 
-                  <div
-                    title="ยังไม่รองรับการแก้ไขผ่าน API"
-                    className="mt-1.5 flex h-10 items-center rounded-lg bg-surface-muted px-3 text-sm cursor-not-allowed opacity-80"
+                  <select
+                    value={locationId}
+                    onChange={(e) => setLocationId(e.target.value ? Number(e.target.value) : "")}
+                    className="mt-1.5 flex h-10 w-full items-center rounded-lg border border-border bg-surface-muted px-3 text-sm outline-none focus:border-brand-purple"
                   >
-                    {item.location?.locationName ?? "—"}
-                  </div>
+                    <option value="">ไม่ระบุ</option>
+                    {locations.map((l) => (
+                      <option key={l.locationId} value={l.locationId}>
+                        {l.locationName}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </section>
 
@@ -1145,37 +1160,17 @@ export function StorageEditModal({
 
                 <p className="text-xs text-text-secondary">สถานะขั้นตอน</p>
 
-                <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
-                  <div
-                    className={
-                      item.currentStatus === "PENDING" ||
-                      item.currentStatus === "FOUNDED"
-                        ? "flex min-h-10 items-center justify-center rounded-lg bg-brand-yellow/40 px-2 text-center font-semibold"
-                        : "flex min-h-10 items-center justify-center rounded-lg bg-surface-muted px-2 text-center text-text-secondary"
-                    }
+                <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                  <select
+                    value={currentStatus}
+                    onChange={(e) => setCurrentStatus(e.target.value)}
+                    className="col-span-2 h-10 rounded-lg border border-border bg-surface-muted px-3 outline-none focus:border-brand-purple font-medium text-brand-purple"
                   >
-                    รอตรวจรับ / บันทึก
-                  </div>
-
-                  <div
-                    className={
-                      item.currentStatus === "IN_CENTER"
-                        ? "flex min-h-10 items-center justify-center rounded-lg bg-brand-yellow/40 px-2 text-center font-semibold"
-                        : "flex min-h-10 items-center justify-center rounded-lg bg-surface-muted px-2 text-center text-text-secondary"
-                    }
-                  >
-                    รอดำเนินการ / รอเจ้าของ
-                  </div>
-
-                  <div
-                    className={
-                      item.currentStatus === "RETURNED"
-                        ? "flex min-h-10 items-center justify-center rounded-lg bg-brand-yellow/40 px-2 text-center font-semibold"
-                        : "flex min-h-10 items-center justify-center rounded-lg bg-surface-muted px-2 text-center text-text-secondary"
-                    }
-                  >
-                    ส่งมอบคืนแล้ว
-                  </div>
+                    <option value="PENDING">รอดำเนินการ</option>
+                    <option value="FOUNDED">พบสิ่งของ</option>
+                    <option value="IN_CENTER">อยู่ในคลังกลาง</option>
+                    <option value="RETURNED">ส่งมอบคืนแล้ว</option>
+                  </select>
                 </div>
 
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
