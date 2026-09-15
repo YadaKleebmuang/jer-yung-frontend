@@ -9,7 +9,6 @@ import Image from "next/image";
 import {
   ImagePlus,
   PackageCheck,
-  QrCode,
   Search,
   Send,
   Warehouse,
@@ -1585,25 +1584,7 @@ export default function StoragePage() {
         </section>
 
         {/* Bottom */}
-        <section className="mt-6 grid gap-6 xl:grid-cols-[280px_1fr]">
-          <article className="flex flex-col items-center justify-center rounded-2xl bg-surface p-6 text-center">
-            <QrCode className="size-12 text-brand-purple" />
-            <h2 className="mt-4 text-xl font-bold">
-              สร้างรหัสอ้างอิง
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-text-secondary">
-              สร้าง QR Code หรือรหัสติดตาม
-              สำหรับติดที่สิ่งของที่รับเข้ามาใหม่
-            </p>
-            <button
-              type="button"
-              disabled
-              className="mt-5 h-10 w-full rounded-lg bg-brand-yellow text-sm font-semibold opacity-60"
-            >
-              สร้างรหัสใหม่
-            </button>
-          </article>
-
+        <section className="mt-6">
           <article className="overflow-hidden rounded-2xl bg-surface">
             <div className="flex items-center justify-between border-b border-border px-6 py-5">
               <div className="flex items-center gap-2">
