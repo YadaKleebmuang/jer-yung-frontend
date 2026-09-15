@@ -13,6 +13,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { ApiError } from "@/services/api-client";
 import {
   getCurrentUser,
+  updateCurrentUser,
   type CurrentUser,
   type UserRole,
 } from "@/services/auth.service";
@@ -34,6 +35,17 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] =
     useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] =
+    useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] =
+    useState<string | null>(null);
+  const [form, setForm] = useState({
+    userFullName: "",
+    userPhoneNumber: "",
+    userLineId: "",
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -43,6 +55,14 @@ export default function ProfilePage() {
         if (cancelled) return;
 
         setUser(response.content);
+        setForm({
+          userFullName:
+            response.content.userFullName,
+          userPhoneNumber:
+            response.content.userPhoneNumber ?? "",
+          userLineId:
+            response.content.userLineId ?? "",
+        });
         setError(null);
       })
       .catch((err: unknown) => {
@@ -65,6 +85,78 @@ export default function ProfilePage() {
       cancelled = true;
     };
   }, []);
+
+  function startEditing() {
+    if (!user) return;
+
+    setForm({
+      userFullName: user.userFullName,
+      userPhoneNumber:
+        user.userPhoneNumber ?? "",
+      userLineId: user.userLineId ?? "",
+    });
+    setSaveError(null);
+    setSaveSuccess(null);
+    setEditing(true);
+  }
+
+  function cancelEditing() {
+    if (user) {
+      setForm({
+        userFullName: user.userFullName,
+        userPhoneNumber:
+          user.userPhoneNumber ?? "",
+        userLineId: user.userLineId ?? "",
+      });
+    }
+
+    setSaveError(null);
+    setEditing(false);
+  }
+
+  async function saveProfile() {
+    const fullName = form.userFullName.trim();
+
+    if (!fullName) {
+      setSaveError("กรุณากรอกชื่อ-นามสกุล");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setSaveError(null);
+      setSaveSuccess(null);
+
+      const response = await updateCurrentUser({
+        userFullName: fullName,
+        userPhoneNumber:
+          form.userPhoneNumber.trim(),
+        userLineId: form.userLineId.trim(),
+      });
+
+      setUser(response.content);
+      setForm({
+        userFullName:
+          response.content.userFullName,
+        userPhoneNumber:
+          response.content.userPhoneNumber ?? "",
+        userLineId:
+          response.content.userLineId ?? "",
+      });
+      setEditing(false);
+      setSaveSuccess(
+        "บันทึกข้อมูลเรียบร้อยแล้ว",
+      );
+    } catch (err) {
+      setSaveError(
+        err instanceof ApiError
+          ? err.message
+          : "ไม่สามารถบันทึกข้อมูลได้",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <div className="py-8">
@@ -146,15 +238,54 @@ export default function ProfilePage() {
                 </p>
               </div>
 
-              <button
-                type="button"
-                disabled
-                title="ยังไม่มี API สำหรับแก้ไขข้อมูลผู้ใช้"
-                className="rounded-lg bg-brand-purple px-4 py-2.5 text-sm font-semibold text-white opacity-50"
-              >
-                แก้ไขข้อมูล
-              </button>
+              {editing ? (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={cancelEditing}
+                    disabled={saving}
+                    className="rounded-lg bg-surface-muted px-4 py-2.5 text-sm font-semibold text-foreground disabled:opacity-50"
+                  >
+                    ยกเลิก
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => void saveProfile()}
+                    disabled={saving}
+                    className="rounded-lg bg-brand-purple px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                  >
+                    {saving
+                      ? "กำลังบันทึก..."
+                      : "บันทึก"}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={startEditing}
+                  disabled={loading || !user}
+                  className="rounded-lg bg-brand-purple px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  แก้ไขข้อมูล
+                </button>
+              )}
             </div>
+
+            {saveError ? (
+              <p
+                role="alert"
+                className="mt-5 text-sm text-danger"
+              >
+                {saveError}
+              </p>
+            ) : null}
+
+            {saveSuccess ? (
+              <p className="mt-5 text-sm font-medium text-green-600">
+                {saveSuccess}
+              </p>
+            ) : null}
 
             <div className="mt-7 grid gap-5 sm:grid-cols-2">
               <div className="sm:col-span-2">
@@ -171,9 +302,19 @@ export default function ProfilePage() {
                   <input
                     id="profile-name"
                     type="text"
-                    value={user?.userFullName ?? ""}
-                    readOnly
-                    disabled
+                    value={
+                      editing
+                        ? form.userFullName
+                        : user?.userFullName ?? ""
+                    }
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        userFullName: event.target.value,
+                      }))
+                    }
+                    readOnly={!editing}
+                    disabled={!editing || saving}
                     placeholder={
                       loading
                         ? "กำลังโหลด..."
@@ -225,9 +366,19 @@ export default function ProfilePage() {
                   <input
                     id="profile-phone"
                     type="tel"
-                    value={user?.userPhoneNumber ?? ""}
-                    readOnly
-                    disabled
+                    value={
+                      editing
+                        ? form.userPhoneNumber
+                        : user?.userPhoneNumber ?? ""
+                    }
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        userPhoneNumber: event.target.value,
+                      }))
+                    }
+                    readOnly={!editing}
+                    disabled={!editing || saving}
                     placeholder="ยังไม่มีข้อมูล"
                     className="h-12 w-full rounded-lg border border-border bg-surface-muted pl-11 pr-4 text-sm text-text-secondary"
                   />
@@ -248,9 +399,19 @@ export default function ProfilePage() {
                   <input
                     id="profile-line"
                     type="text"
-                    value={user?.userLineId ?? ""}
-                    readOnly
-                    disabled
+                    value={
+                      editing
+                        ? form.userLineId
+                        : user?.userLineId ?? ""
+                    }
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        userLineId: event.target.value,
+                      }))
+                    }
+                    readOnly={!editing}
+                    disabled={!editing || saving}
                     placeholder="ยังไม่มีข้อมูล"
                     className="h-12 w-full rounded-lg border border-border bg-surface-muted pl-11 pr-4 text-sm text-text-secondary"
                   />

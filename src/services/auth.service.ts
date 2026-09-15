@@ -67,3 +67,18 @@ export function getCurrentUser() {
     "/api/auth/users/me",
   );
 }
+
+export interface UpdateCurrentUserRequest {
+  userFullName: string;
+  userPhoneNumber: string;
+  userLineId: string;
+}
+
+export function updateCurrentUser(
+  payload: UpdateCurrentUserRequest,
+) {
+  return apiClient.put<ApiResponse<CurrentUser>>(
+    "/api/auth/users/me",
+    payload,
+  );
+}
