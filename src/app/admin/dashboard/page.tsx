@@ -22,9 +22,29 @@ import {
 import { ApiError } from "@/services/api-client";
 
 function formatDay(value: string) {
-  return new Intl.DateTimeFormat("th-TH", {
-    weekday: "short",
-  }).format(new Date(`${value}T00:00:00`));
+  const normalized = value.trim();
+
+  const isoDatePattern =
+    /^\d{4}-\d{2}-\d{2}$/;
+
+  if (!isoDatePattern.test(normalized)) {
+    return normalized;
+  }
+
+  const date = new Date(
+    `${normalized}T00:00:00`,
+  );
+
+  if (Number.isNaN(date.getTime())) {
+    return normalized;
+  }
+
+  return new Intl.DateTimeFormat(
+    "th-TH",
+    {
+      weekday: "short",
+    },
+  ).format(date);
 }
 
 export default function AdminDashboardPage() {

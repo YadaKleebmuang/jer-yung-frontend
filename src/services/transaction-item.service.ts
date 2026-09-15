@@ -1,6 +1,7 @@
 import { apiClient } from "@/services/api-client";
 import { type ApiResponse, type PaginatedApiResponse } from "@/types/api";
 import {
+  type CreateTransactionItemInput,
   type TransactionItemListItem,
   type TransactionItemPostType,
 } from "@/types/transaction-item";
@@ -47,5 +48,52 @@ export function getTransactionItemById(
     ApiResponse<TransactionItemDetail>
   >(
     `/api/transaction-items/${id}`,
+  );
+}
+
+export function createTransactionItem(
+  input: CreateTransactionItemInput,
+) {
+  const formData = new FormData();
+
+  formData.append(
+    "locationId",
+    String(input.locationId),
+  );
+
+  formData.append(
+    "categoryId",
+    String(input.categoryId),
+  );
+
+  formData.append(
+    "transactionItemsPostType",
+    input.transactionItemsPostType,
+  );
+
+  formData.append(
+    "transactionItemsName",
+    input.transactionItemsName,
+  );
+
+  formData.append(
+    "transactionItemsLocationDetails",
+    input.transactionItemsLocationDetails,
+  );
+
+  if (input.transactionItemsStorageType) {
+    formData.append(
+      "transactionItemsStorageType",
+      input.transactionItemsStorageType,
+    );
+  }
+
+  input.images?.forEach((image) => {
+    formData.append("images", image);
+  });
+
+  return apiClient.post<ApiResponse<unknown>>(
+    "/api/transaction-items",
+    formData,
   );
 }

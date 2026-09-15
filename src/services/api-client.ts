@@ -22,11 +22,16 @@ export interface ApiRequestOptions
 }
 
 function getApiBaseUrl() {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+  const baseUrl =
+    typeof window === "undefined"
+      ? process.env.BACKEND_API_URL ??
+        process.env.NEXT_PUBLIC_API_URL
+      : process.env.NEXT_PUBLIC_API_PROXY_URL ??
+        process.env.NEXT_PUBLIC_API_URL;
 
   if (!baseUrl) {
     throw new Error(
-      "NEXT_PUBLIC_API_URL is not configured.",
+      "API base URL is not configured.",
     );
   }
 

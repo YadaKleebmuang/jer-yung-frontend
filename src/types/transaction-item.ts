@@ -34,3 +34,17 @@ export interface TransactionItemListItem {
   categories: TransactionItemCategory | null;
   users: TransactionItemUser | null;
 }
+
+export type TransactionItemStorageType =
+  | "SELF"
+  | "CENTRAL";
+
+export interface CreateTransactionItemInput {
+  locationId: number;
+  categoryId: number;
+  transactionItemsPostType: TransactionItemPostType;
+  transactionItemsName: string;
+  transactionItemsLocationDetails: string;
+  transactionItemsStorageType?: TransactionItemStorageType;
+  images?: File[];
+}

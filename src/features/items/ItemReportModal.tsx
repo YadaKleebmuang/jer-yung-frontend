@@ -9,9 +9,17 @@ import Image from "next/image";
 import {
   useEffect,
   useState,
+  type FormEvent,
 } from "react";
 
 import { cn } from "@/lib/utils";
+import { ApiError } from "@/services/api-client";
+import { getCategories } from "@/services/category.service";
+import { createTransactionItem } from "@/services/transaction-item.service";
+import { getLocations } from "@/services/location.service";
+import { type Category } from "@/types/category";
+import { type Location } from "@/types/location";
+import { type TransactionItemStorageType } from "@/types/transaction-item";
 
 export type ItemReportType =
   | "LOST"
@@ -21,6 +29,7 @@ export interface ItemReportModalProps {
   open: boolean;
   type: ItemReportType;
   onClose: () => void;
+  onSubmitted?: () => void;
 }
 
 interface SelectedImage {
@@ -34,6 +43,7 @@ export function ItemReportModal({
   open,
   type,
   onClose,
+  onSubmitted,
 }: ItemReportModalProps) {
   const [activeType, setActiveType] =
     useState<ItemReportType>(type);
@@ -41,6 +51,64 @@ export function ItemReportModal({
   const [images, setImages] = useState<
     SelectedImage[]
   >([]);
+
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
+
+  const [lostCategoryId, setLostCategoryId] = useState("");
+  const [lostLocationId, setLostLocationId] = useState("");
+  const [foundCategoryId, setFoundCategoryId] = useState("");
+  const [foundLocationId, setFoundLocationId] = useState("");
+
+  const [lookupLoading, setLookupLoading] = useState(true);
+  const [lookupError, setLookupError] = useState<string | null>(
+    null,
+  );
+
+  const [lostName, setLostName] = useState("");
+  const [lostDetails, setLostDetails] = useState("");
+
+  const [foundName, setFoundName] = useState("");
+  const [foundDetails, setFoundDetails] = useState("");
+  const [foundStorageType, setFoundStorageType] =
+    useState<TransactionItemStorageType | "">("");
+
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(
+    null,
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    Promise.all([
+      getCategories(),
+      getLocations(),
+    ])
+      .then(([categoryData, locationData]) => {
+        if (cancelled) return;
+
+        setCategories(categoryData);
+        setLocations(locationData);
+        setLookupError(null);
+      })
+      .catch(() => {
+        if (cancelled) return;
+
+        setLookupError(
+          "ไม่สามารถโหลดหมวดหมู่หรือสถานที่ได้",
+        );
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLookupLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -104,6 +172,77 @@ export function ItemReportModal({
     });
   }
 
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault();
+    setSubmitError(null);
+
+    const categoryId = isLost
+      ? lostCategoryId
+      : foundCategoryId;
+
+    const locationId = isLost
+      ? lostLocationId
+      : foundLocationId;
+
+    const itemName = isLost
+      ? lostName.trim()
+      : foundName.trim();
+
+    const itemDetails = isLost
+      ? lostDetails.trim()
+      : foundDetails.trim();
+
+    if (!itemName) {
+      setSubmitError("กรุณากรอกชื่อสิ่งของ");
+      return;
+    }
+
+    if (!categoryId) {
+      setSubmitError("กรุณาเลือกหมวดหมู่");
+      return;
+    }
+
+    if (!locationId) {
+      setSubmitError("กรุณาเลือกสถานที่");
+      return;
+    }
+
+    if (!isLost && !foundStorageType) {
+      setSubmitError("กรุณาเลือกรูปแบบการเก็บรักษาสิ่งของ");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      await createTransactionItem({
+        locationId: Number(locationId),
+        categoryId: Number(categoryId),
+        transactionItemsPostType: activeType,
+        transactionItemsName: itemName,
+        transactionItemsLocationDetails: itemDetails,
+        transactionItemsStorageType:
+          isLost
+            ? undefined
+            : foundStorageType || undefined,
+        images: images.map((image) => image.file),
+      });
+
+      onSubmitted?.();
+      onClose();
+    } catch (err) {
+      setSubmitError(
+        err instanceof ApiError
+          ? err.message
+          : "ไม่สามารถบันทึกข้อมูลได้",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4"
@@ -154,9 +293,7 @@ export function ItemReportModal({
 
         <form
           className="overflow-y-auto"
-          onSubmit={(event) => {
-            event.preventDefault();
-          }}
+          onSubmit={handleSubmit}
         >
           <div className="space-y-6 p-6">
             {/* Images */}
@@ -277,8 +414,14 @@ export function ItemReportModal({
                     <input
                       id="lost-name"
                       type="text"
+                      value={lostName}
+                      onChange={(event) => {
+                        setLostName(event.target.value);
+                        setSubmitError(null);
+                      }}
+                      disabled={submitting}
                       placeholder="เช่น กระเป๋าสตางค์สีดำ"
-                      className="mt-2 h-11 w-full rounded-md border border-border px-3 text-sm outline-none focus:border-brand-purple"
+                      className="mt-2 h-11 w-full rounded-md border border-border px-3 text-sm outline-none focus:border-brand-purple disabled:opacity-60"
                     />
                   </div>
 
@@ -292,42 +435,51 @@ export function ItemReportModal({
 
                     <select
                       id="lost-category"
-                      disabled
-                      className="mt-2 h-11 w-full rounded-md border border-border bg-surface-muted px-3 text-sm text-text-secondary"
+                      value={lostCategoryId}
+                      onChange={(event) =>
+                        setLostCategoryId(event.target.value)
+                      }
+                      disabled={lookupLoading}
+                      className="mt-2 h-11 w-full rounded-md border border-border bg-white px-3 text-sm outline-none focus:border-brand-purple disabled:bg-surface-muted disabled:text-text-secondary"
                     >
-                      <option>
-                        เลือกหมวดหมู่
+                      <option value="">
+                        {lookupLoading
+                          ? "กำลังโหลดหมวดหมู่..."
+                          : categories.length === 0
+                            ? "ยังไม่มีหมวดหมู่ในระบบ"
+                            : "เลือกหมวดหมู่"}
                       </option>
+
+                      {categories.map((category) => (
+                        <option
+                          key={category.categoryId}
+                          value={category.categoryId}
+                        >
+                          {category.categoryName}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
-                  <div>
+                  <div className="sm:col-span-2">
                     <label
-                      htmlFor="lost-date"
+                      htmlFor="lost-details"
                       className="text-sm font-semibold text-foreground"
                     >
-                      วันที่ทำหาย
+                      รายละเอียดเพิ่มเติม
                     </label>
 
-                    <input
-                      id="lost-date"
-                      type="date"
-                      className="mt-2 h-11 w-full rounded-md border border-border px-3 text-sm outline-none focus:border-brand-purple"
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="lost-time"
-                      className="text-sm font-semibold text-foreground"
-                    >
-                      เวลาที่คาดว่าทำหาย
-                    </label>
-
-                    <input
-                      id="lost-time"
-                      type="time"
-                      className="mt-2 h-11 w-full rounded-md border border-border px-3 text-sm outline-none focus:border-brand-purple"
+                    <textarea
+                      id="lost-details"
+                      rows={3}
+                      value={lostDetails}
+                      onChange={(event) => {
+                        setLostDetails(event.target.value);
+                        setSubmitError(null);
+                      }}
+                      disabled={submitting}
+                      placeholder="เช่น สี ยี่ห้อ ลักษณะเด่น หรือรายละเอียดบริเวณที่ทำหาย"
+                      className="mt-2 w-full resize-none rounded-md border border-border px-3 py-3 text-sm outline-none focus:border-brand-purple disabled:opacity-60"
                     />
                   </div>
 
@@ -344,142 +496,222 @@ export function ItemReportModal({
 
                       <select
                         id="lost-location"
-                        disabled
-                        className="h-11 w-full rounded-md border border-border bg-surface-muted pl-9 pr-3 text-sm text-text-secondary"
+                        value={lostLocationId}
+                        onChange={(event) =>
+                          setLostLocationId(event.target.value)
+                        }
+                        disabled={lookupLoading}
+                        className="h-11 w-full rounded-md border border-border bg-white pl-9 pr-3 text-sm outline-none focus:border-brand-purple disabled:bg-surface-muted disabled:text-text-secondary"
                       >
-                        <option>
-                          เลือกสถานที่
+                        <option value="">
+                          {lookupLoading
+                            ? "กำลังโหลดสถานที่..."
+                            : locations.length === 0
+                              ? "ยังไม่มีสถานที่ในระบบ"
+                              : "เลือกสถานที่"}
                         </option>
+
+                        {locations.map((location) => (
+                          <option
+                            key={location.locationId}
+                            value={location.locationId}
+                          >
+                            {location.locationName}
+                            {location.locationZone
+                              ? ` — ${location.locationZone}`
+                              : ""}
+                          </option>
+                        ))}
                       </select>
                     </div>
                   </div>
                 </div>
 
-                <div className="rounded-lg bg-surface-muted p-4">
-                  <p className="text-sm font-semibold text-foreground">
-                    สถานะการค้นหา
-                  </p>
-
-                  <div className="mt-3 flex flex-wrap gap-6">
-                    <label className="flex items-center gap-2 text-sm">
-                      <input
-                        type="radio"
-                        name="lostStatus"
-                        defaultChecked
-                        className="accent-brand-purple"
-                      />
-                      กำลังตามหา
-                    </label>
-
-                    <label className="flex items-center gap-2 text-sm">
-                      <input
-                        type="radio"
-                        name="lostStatus"
-                        className="accent-brand-purple"
-                      />
-                      ได้คืนแล้ว
-                    </label>
-                  </div>
-                </div>
               </>
             ) : (
               <>
                 {/* FOUND */}
-                <div>
-                  <label
-                    htmlFor="found-detail"
-                    className="text-sm font-semibold text-foreground"
-                  >
-                    รายละเอียดของที่พบ
-                  </label>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <div>
+                    <label
+                      htmlFor="found-name"
+                      className="text-sm font-semibold text-foreground"
+                    >
+                      ชื่อสิ่งของ
+                    </label>
 
-                  <textarea
-                    id="found-detail"
-                    rows={4}
-                    placeholder="อธิบายลักษณะสิ่งของ, สี, ยี่ห้อ หรือจุดเด่นอื่นๆ"
-                    className="mt-2 w-full resize-none rounded-md border border-border px-3 py-3 text-sm outline-none focus:border-brand-yellow"
-                  />
+                    <input
+                      id="found-name"
+                      type="text"
+                      value={foundName}
+                      onChange={(event) => {
+                        setFoundName(event.target.value);
+                        setSubmitError(null);
+                      }}
+                      disabled={submitting}
+                      placeholder="เช่น โทรศัพท์มือถือ"
+                      className="mt-2 h-11 w-full rounded-md border border-border px-3 text-sm outline-none focus:border-brand-yellow disabled:opacity-60"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="found-detail"
+                      className="text-sm font-semibold text-foreground"
+                    >
+                      รายละเอียดของที่พบ
+                    </label>
+
+                    <textarea
+                      id="found-detail"
+                      rows={3}
+                      value={foundDetails}
+                      onChange={(event) => {
+                        setFoundDetails(event.target.value);
+                        setSubmitError(null);
+                      }}
+                      disabled={submitting}
+                      placeholder="สี ยี่ห้อ ลักษณะเด่น หรือรายละเอียดอื่นๆ"
+                      className="mt-2 w-full resize-none rounded-md border border-border px-3 py-3 text-sm outline-none focus:border-brand-yellow disabled:opacity-60"
+                    />
+                  </div>
                 </div>
 
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div>
                     <label
-                      htmlFor="found-date"
+                      htmlFor="found-category"
                       className="text-sm font-semibold text-foreground"
                     >
-                      วันที่พบ
+                      หมวดหมู่
                     </label>
 
-                    <input
-                      id="found-date"
-                      type="date"
-                      className="mt-2 h-11 w-full rounded-md border border-border px-3 text-sm outline-none focus:border-brand-yellow"
-                    />
+                    <select
+                      id="found-category"
+                      value={foundCategoryId}
+                      onChange={(event) =>
+                        setFoundCategoryId(event.target.value)
+                      }
+                      disabled={lookupLoading}
+                      className="mt-2 h-11 w-full rounded-md border border-border bg-white px-3 text-sm outline-none focus:border-brand-yellow disabled:bg-surface-muted disabled:text-text-secondary"
+                    >
+                      <option value="">
+                        {lookupLoading
+                          ? "กำลังโหลดหมวดหมู่..."
+                          : categories.length === 0
+                            ? "ยังไม่มีหมวดหมู่ในระบบ"
+                            : "เลือกหมวดหมู่"}
+                      </option>
+
+                      {categories.map((category) => (
+                        <option
+                          key={category.categoryId}
+                          value={category.categoryId}
+                        >
+                          {category.categoryName}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div>
                     <label
-                      htmlFor="found-time"
+                      htmlFor="found-location"
                       className="text-sm font-semibold text-foreground"
                     >
-                      เวลาที่พบ
+                      สถานที่ที่พบ
                     </label>
 
-                    <input
-                      id="found-time"
-                      type="time"
-                      className="mt-2 h-11 w-full rounded-md border border-border px-3 text-sm outline-none focus:border-brand-yellow"
-                    />
+                    <select
+                      id="found-location"
+                      value={foundLocationId}
+                      onChange={(event) =>
+                        setFoundLocationId(event.target.value)
+                      }
+                      disabled={lookupLoading}
+                      className="mt-2 h-11 w-full rounded-md border border-border bg-white px-3 text-sm outline-none focus:border-brand-yellow disabled:bg-surface-muted disabled:text-text-secondary"
+                    >
+                      <option value="">
+                        {lookupLoading
+                          ? "กำลังโหลดสถานที่..."
+                          : locations.length === 0
+                            ? "ยังไม่มีสถานที่ในระบบ"
+                            : "เลือกสถานที่"}
+                      </option>
+
+                      {locations.map((location) => (
+                        <option
+                          key={location.locationId}
+                          value={location.locationId}
+                        >
+                          {location.locationName}
+                          {location.locationZone
+                            ? ` — ${location.locationZone}`
+                            : ""}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="found-location"
-                    className="text-sm font-semibold text-foreground"
-                  >
-                    สถานที่เก็บรักษาปัจจุบัน
-                  </label>
-
-                  <select
-                    id="found-location"
-                    disabled
-                    className="mt-2 h-11 w-full rounded-md border border-border bg-surface-muted px-3 text-sm text-text-secondary"
-                  >
-                    <option>
-                      เลือกสถานที่
-                    </option>
-                  </select>
                 </div>
 
                 <div className="rounded-lg bg-surface-muted p-4">
                   <p className="text-sm font-semibold text-foreground">
-                    สถานะการส่งคืน
+                    การเก็บรักษาสิ่งของ
                   </p>
 
                   <div className="mt-3 flex flex-wrap gap-6">
                     <label className="flex items-center gap-2 text-sm">
                       <input
                         type="radio"
-                        name="foundStatus"
-                        defaultChecked
+                        name="foundStorageType"
+                        value="SELF"
+                        checked={foundStorageType === "SELF"}
+                        onChange={() => {
+                          setFoundStorageType("SELF");
+                          setSubmitError(null);
+                        }}
+                        disabled={submitting}
                         className="accent-yellow-400"
                       />
-                      รอเจ้าของติดต่อ
+                      เก็บไว้กับผู้พบ
                     </label>
 
                     <label className="flex items-center gap-2 text-sm">
                       <input
                         type="radio"
-                        name="foundStatus"
+                        name="foundStorageType"
+                        value="CENTRAL"
+                        checked={foundStorageType === "CENTRAL"}
+                        onChange={() => {
+                          setFoundStorageType("CENTRAL");
+                          setSubmitError(null);
+                        }}
+                        disabled={submitting}
                         className="accent-yellow-400"
                       />
-                      ส่งคืนเจ้าของแล้ว
+                      ฝากที่จุดรับฝากกลาง
                     </label>
                   </div>
                 </div>
               </>
             )}
+            {lookupError ? (
+              <div
+                role="alert"
+                className="rounded-lg bg-danger/10 px-4 py-3 text-sm text-danger"
+              >
+                {lookupError}
+              </div>
+            ) : null}
+
+            {submitError ? (
+              <div
+                role="alert"
+                className="rounded-lg bg-danger/10 px-4 py-3 text-sm text-danger"
+              >
+                {submitError}
+              </div>
+            ) : null}
           </div>
 
           {/* Footer */}
@@ -494,16 +726,22 @@ export function ItemReportModal({
 
             <button
               type="submit"
-              disabled
-              title="รอเชื่อมข้อมูลหมวดหมู่และสถานที่จาก Backend"
+              disabled={
+                submitting ||
+                lookupLoading ||
+                categories.length === 0 ||
+                locations.length === 0
+              }
               className={cn(
-                "rounded-md px-6 py-2.5 text-sm font-semibold opacity-50",
+                "rounded-md px-6 py-2.5 text-sm font-semibold transition-opacity disabled:cursor-not-allowed disabled:opacity-50",
                 isLost
                   ? "bg-brand-purple text-white"
                   : "bg-brand-yellow text-foreground",
               )}
             >
-              บันทึกข้อมูล
+              {submitting
+                ? "กำลังบันทึก..."
+                : "บันทึกข้อมูล"}
             </button>
           </div>
         </form>
