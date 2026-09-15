@@ -3,6 +3,7 @@
 import {
   type FormEvent,
   useState,
+  useEffect,
 } from "react";
 import Image from "next/image";
 import {
@@ -37,7 +38,10 @@ import {
   type CentralStorageStats,
 } from "@/services/central-storage.service";
 import { type Category } from "@/types/category";
+import { type Location } from "@/types/location";
 import { type TransactionItemListItem } from "@/types/transaction-item";
+import { getCategories } from "@/services/category.service";
+import { getLocations } from "@/services/location.service";
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "";
@@ -845,9 +849,11 @@ export function StorageDetailModal({
               <div className="mt-2 flex items-center gap-2 font-semibold text-brand-purple">
                 <Warehouse className="size-4" />
                 <span>
-                  {item.location
-                    ?.centralStationName ??
-                    "ฝากไว้ที่จุดรับฝากกลาง"}
+                  {item.currentStatus === "PENDING" && item.transactionItemsStorageType === "CENTRAL"
+                    ? "ฝากไว้ที่จุดรับฝากกลาง"
+                    : item.currentStatus
+                      ? getCentralStatusLabel(item.currentStatus)
+                      : "ไม่ทราบสถานะ"}
                 </span>
               </div>
             </div>
@@ -863,8 +869,8 @@ export function StorageDetailModal({
                 </p>
 
                 <p className="mt-1 text-sm text-text-secondary">
-                  {contactPhone ??
-                    "ยังไม่มีข้อมูลเบอร์โทร"}
+                  {item.users?.userPhoneNumber ? `โทร: ${item.users.userPhoneNumber}` : "ไม่มีเบอร์โทร"}
+                  {item.users?.userLineId ? ` | Line: ${item.users.userLineId}` : ""}
                 </p>
               </div>
             </div>
@@ -905,6 +911,35 @@ export function StorageEditModal({
     item.transactionItemsLocationDetails ??
       "",
   );
+  
+  const [categoryId, setCategoryId] = useState<number | "">(
+    item.categories?.categoryId ?? ""
+  );
+  const [locationId, setLocationId] = useState<number | "">(
+    item.location?.locationId ?? ""
+  );
+  const [storageType, setStorageType] = useState(
+    item.transactionItemsStorageType ?? ""
+  );
+  const [currentStatus, setCurrentStatus] = useState<string>(
+    item.currentStatus ?? "PENDING"
+  );
+  
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([getCategories(), getLocations()])
+      .then(([cats, locs]) => {
+        if (!cancelled) {
+          setCategories(cats);
+          setLocations(locs);
+        }
+      })
+      .catch(console.error);
+    return () => { cancelled = true; };
+  }, []);
 
   const [saving, setSaving] =
     useState(false);
@@ -933,10 +968,13 @@ export function StorageEditModal({
         item.transactionItemId >= 0
       ) {
         await updateCentralItemBasic({
-          itemId:
-            item.transactionItemId,
+          itemId: item.transactionItemId,
           itemName: name,
           itemDetails: details,
+          categoryId: categoryId ? Number(categoryId) : undefined,
+          locationId: locationId ? Number(locationId) : undefined,
+          storageType: storageType || undefined,
+          currentStatus: currentStatus || undefined,
         });
       }
 
@@ -946,6 +984,8 @@ export function StorageEditModal({
           name.trim(),
         transactionItemsLocationDetails:
           details.trim(),
+        transactionItemsStorageType: storageType as any,
+        currentStatus: currentStatus as CentralStatus,
       });
     } catch (err) {
       if (err instanceof ApiError) {
@@ -1111,11 +1151,18 @@ export function StorageEditModal({
                       หมวดหมู่
                     </label>
 
-                    <div className="mt-1.5 flex h-10 items-center rounded-lg bg-surface-muted px-3 text-sm">
-                      {item.categories
-                        ?.categoryName ??
-                        "—"}
-                    </div>
+                    <select
+                      value={categoryId}
+                      onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : "")}
+                      className="mt-1.5 flex h-10 w-full items-center rounded-lg border border-border bg-surface-muted px-3 text-sm outline-none focus:border-brand-purple"
+                    >
+                      <option value="">ไม่ระบุ</option>
+                      {categories.map((c) => (
+                        <option key={c.categoryId} value={c.categoryId}>
+                          {c.categoryName}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div>
@@ -1228,14 +1275,31 @@ export function StorageEditModal({
                 </p>
 
                 <div className="mt-2 grid grid-cols-2 gap-2">
-                  <div className="flex h-10 items-center justify-center gap-2 rounded-lg bg-brand-purple/15 text-sm font-semibold text-brand-purple">
+                  <button
+                    type="button"
+                    onClick={() => setStorageType("CENTRAL")}
+                    className={`flex h-10 items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors ${
+                      storageType === "CENTRAL"
+                        ? "bg-brand-purple/15 text-brand-purple"
+                        : "bg-surface-muted text-text-secondary hover:bg-surface-muted/80"
+                    }`}
+                  >
                     <Warehouse className="size-4" />
                     จุดรับฝากกลาง
-                  </div>
+                  </button>
 
-                  <div className="flex h-10 items-center justify-center rounded-lg bg-surface-muted text-sm text-text-secondary">
+                  <button
+                    type="button"
+                    onClick={() => setStorageType("SELF")}
+                    className={`flex h-10 items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors ${
+                      storageType === "SELF"
+                        ? "bg-brand-purple/15 text-brand-purple"
+                        : "bg-surface-muted text-text-secondary hover:bg-surface-muted/80"
+                    }`}
+                  >
+                    <UserRound className="size-4" />
                     อยู่ที่ตนเอง
-                  </div>
+                  </button>
                 </div>
 
                 <div className="mt-4">
@@ -1243,11 +1307,18 @@ export function StorageEditModal({
                     ตำแหน่ง / อาคาร
                   </p>
 
-                  <div className="mt-1.5 flex h-10 items-center rounded-lg bg-surface-muted px-3 text-sm">
-                    {item.location
-                      ?.locationName ??
-                      "—"}
-                  </div>
+                  <select
+                    value={locationId}
+                    onChange={(e) => setLocationId(e.target.value ? Number(e.target.value) : "")}
+                    className="mt-1.5 flex h-10 w-full items-center rounded-lg border border-border bg-surface-muted px-3 text-sm outline-none focus:border-brand-purple"
+                  >
+                    <option value="">ไม่ระบุ</option>
+                    {locations.map((l) => (
+                      <option key={l.locationId} value={l.locationId}>
+                        {l.locationName}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </section>
 
@@ -1264,18 +1335,17 @@ export function StorageEditModal({
                   สถานะขั้นตอน
                 </p>
 
-                <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
-                  <div className="flex min-h-10 items-center justify-center rounded-lg bg-brand-yellow/40 px-2 text-center font-semibold">
-                    รอตรวจรับ / บันทึก
-                  </div>
-
-                  <div className="flex min-h-10 items-center justify-center rounded-lg bg-surface-muted px-2 text-center text-text-secondary">
-                    รอดำเนินการ / รอเจ้าของ
-                  </div>
-
-                  <div className="flex min-h-10 items-center justify-center rounded-lg bg-surface-muted px-2 text-center text-text-secondary">
-                    ส่งมอบคืนแล้ว
-                  </div>
+                <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                  <select
+                    value={currentStatus}
+                    onChange={(e) => setCurrentStatus(e.target.value)}
+                    className="col-span-2 h-10 rounded-lg border border-border bg-surface-muted px-3 outline-none focus:border-brand-purple font-medium text-brand-purple"
+                  >
+                    <option value="PENDING">รอดำเนินการ</option>
+                    <option value="FOUNDED">พบสิ่งของ</option>
+                    <option value="IN_CENTER">อยู่ในคลังกลาง</option>
+                    <option value="RETURNED">ส่งมอบคืนแล้ว</option>
+                  </select>
                 </div>
 
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">

@@ -5,10 +5,12 @@ import { JerYungSidebar } from "@/components/layout/JerYungSidebar";
 
 export interface UserLayoutProps {
   children: ReactNode;
+  modal: ReactNode;
 }
 
 export default function UserLayout({
   children,
+  modal,
 }: UserLayoutProps) {
   return (
     <AppShell
@@ -20,6 +22,7 @@ export default function UserLayout({
       }
     >
       {children}
+      {modal}
     </AppShell>
   );
 }

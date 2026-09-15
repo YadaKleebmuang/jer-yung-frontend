@@ -82,7 +82,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           />
 
           {endIcon && (
-            <div className="absolute inset-y-0 right-3 flex items-center text-text-secondary">
+            <div className="absolute inset-y-0 right-3 z-10 flex items-center text-text-secondary">
               {endIcon}
             </div>
           )}
