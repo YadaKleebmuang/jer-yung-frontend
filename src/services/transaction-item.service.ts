@@ -97,3 +97,21 @@ export function createTransactionItem(
     formData,
   );
 }
+
+export function updateTransactionItem(
+  id: number,
+  formData: FormData,
+) {
+  return apiClient.put<ApiResponse<unknown>>(
+    `/api/transaction-items/${id}`,
+    formData,
+  );
+}
+
+export function deleteTransactionItem(
+  id: number,
+) {
+  return apiClient.delete<ApiResponse<unknown>>(
+    `/api/transaction-items/${id}`,
+  );
+}

@@ -55,6 +55,10 @@ export function LoginForm() {
         AUTH_ROLE_STORAGE_KEY,
         response.content.userRole,
       );
+      window.localStorage.setItem(
+        "jeryung-user-id",
+        response.content.userId.toString(),
+      );
 
       if (rememberMe) {
         window.localStorage.setItem(
