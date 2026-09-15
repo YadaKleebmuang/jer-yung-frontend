@@ -1711,6 +1711,10 @@ export default function StoragePage() {
             );
             setEditItem(null);
           }}
+          onDeleted={(deletedId) => {
+            setItems((current) => current.filter((item) => item.transactionItemId !== deletedId));
+            setEditItem(null);
+          }}
         />
       ) : null}
     </div>
