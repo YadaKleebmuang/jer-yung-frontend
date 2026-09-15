@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { EmptyState } from "@/components/shared/EmptyState";
-import { LatestItemCard } from "@/features/dashboard/LatestItemCard";
+import { ItemsGrid } from "@/features/items/ItemsGrid";
 import { type TransactionItemListItem } from "@/types/transaction-item";
 
 type LatestItemsTab = "lost" | "found";
@@ -82,14 +82,8 @@ export function LatestItemsTabs({
           />
         </div>
       ) : (
-        <div className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-          {items.map((item) => (
-            <LatestItemCard
-              key={item.transactionItemId}
-              item={item}
-              basePath={basePath}
-            />
-          ))}
+        <div className="mt-6">
+          <ItemsGrid items={items} basePath={basePath} />
         </div>
       )}
 
