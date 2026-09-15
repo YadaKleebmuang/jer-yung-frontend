@@ -24,6 +24,8 @@ import {
   getCentralItemByReference,
   getCentralStorageItems,
   getCentralStorageStats,
+  getPendingHandoverItems,
+  handoverToCentral,
   warehouseReceiveCentralItem,
   type CentralStatus,
   type CentralStorageStats,
@@ -384,6 +386,36 @@ export default function StoragePage() {
     setCheckoutSubmitting,
   ] = useState(false);
 
+  const [
+    pendingHandoverItems,
+    setPendingHandoverItems,
+  ] = useState<TransactionItemListItem[]>([]);
+
+  const [
+    pendingHandoverOpen,
+    setPendingHandoverOpen,
+  ] = useState(false);
+
+  const [
+    pendingHandoverLoading,
+    setPendingHandoverLoading,
+  ] = useState(true);
+
+  const [
+    pendingHandoverError,
+    setPendingHandoverError,
+  ] = useState<string | null>(null);
+
+  const [
+    pendingHandoverSuccess,
+    setPendingHandoverSuccess,
+  ] = useState<string | null>(null);
+
+  const [
+    handoverSubmittingId,
+    setHandoverSubmittingId,
+  ] = useState<number | null>(null);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -408,6 +440,39 @@ export default function StoragePage() {
         setStorageLoadError(message);
 
         setItems([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getPendingHandoverItems()
+      .then((response) => {
+        if (cancelled) return;
+
+        setPendingHandoverItems(
+          response.content.content,
+        );
+        setPendingHandoverError(null);
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+
+        setPendingHandoverItems([]);
+        setPendingHandoverError(
+          err instanceof ApiError
+            ? err.message
+            : "ไม่สามารถโหลดรายการรอส่งมอบได้",
+        );
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setPendingHandoverLoading(false);
+        }
       });
 
     return () => {
@@ -448,6 +513,20 @@ export default function StoragePage() {
   }, []);
 
   const latestItems = items.slice(0, 3);
+
+  const validPendingHandoverItems =
+    pendingHandoverItems.filter(
+      (item) =>
+        item.transactionItemsPostType ===
+          "FOUND" &&
+        item.transactionItemsStorageType ===
+          "SELF" &&
+        item.currentStatus === "PENDING",
+    );
+
+  const invalidPendingHandoverCount =
+    pendingHandoverItems.length -
+    validPendingHandoverItems.length;
 
   async function loadInventoryPage(
     page: number,
@@ -600,6 +679,77 @@ export default function StoragePage() {
         },
       );
     });
+  }
+
+  async function handleHandover(
+    item: TransactionItemListItem,
+  ) {
+    const isPendingHandover =
+      item.transactionItemsPostType ===
+        "FOUND" &&
+      item.transactionItemsStorageType ===
+        "SELF" &&
+      item.currentStatus === "PENDING";
+
+    if (!isPendingHandover) {
+      setPendingHandoverError(
+        "รายการนี้ไม่อยู่ในสถานะรอส่งมอบเข้าคลัง",
+      );
+      return;
+    }
+
+    try {
+      setHandoverSubmittingId(
+        item.transactionItemId,
+      );
+      setPendingHandoverError(null);
+      setPendingHandoverSuccess(null);
+
+      await handoverToCentral(
+        item.transactionItemId,
+      );
+
+      setPendingHandoverSuccess(
+        "รับสิ่งของเข้าคลังกลางเรียบร้อยแล้ว",
+      );
+
+      try {
+        const [
+          pendingResponse,
+          centralResponse,
+          statsResponse,
+        ] = await Promise.all([
+          getPendingHandoverItems(),
+          getCentralStorageItems({
+            page: 0,
+            limit: 10,
+          }),
+          getCentralStorageStats(),
+        ]);
+
+        setPendingHandoverItems(
+          pendingResponse.content.content,
+        );
+        setItems(
+          centralResponse.content.content,
+        );
+        setCentralStats(
+          statsResponse.content,
+        );
+      } catch {
+        setPendingHandoverError(
+          "รับเข้าคลังสำเร็จ แต่ไม่สามารถโหลดข้อมูลล่าสุดได้ กรุณารีเฟรชหน้า",
+        );
+      }
+    } catch (err) {
+      setPendingHandoverError(
+        err instanceof ApiError
+          ? err.message
+          : "ไม่สามารถรับสิ่งของเข้าคลังกลางได้",
+      );
+    } finally {
+      setHandoverSubmittingId(null);
+    }
   }
 
   async function handleReferenceSearch() {
@@ -800,6 +950,173 @@ export default function StoragePage() {
             </div>
           ) : null}
         </section>
+
+        <section className="mt-7">
+          <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand-purple/10 bg-surface px-5 py-4">
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-xl bg-brand-purple/10">
+                <Warehouse className="size-5 text-brand-purple" />
+              </div>
+
+              <div>
+                <p className="font-semibold text-foreground">
+                  รายการรอรับเข้าคลัง
+                </p>
+                <p className="mt-0.5 text-sm text-text-secondary">
+                  {pendingHandoverLoading
+                    ? "กำลังตรวจสอบรายการ..."
+                    : validPendingHandoverItems.length > 0
+                      ? `มี ${validPendingHandoverItems.length} รายการรอรับ`
+                      : "ไม่มีรายการรอรับในขณะนี้"}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() =>
+                setPendingHandoverOpen(true)
+              }
+              disabled={pendingHandoverLoading}
+              className="rounded-lg border border-brand-purple/20 px-4 py-2 text-sm font-semibold text-brand-purple hover:bg-brand-purple/5 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              ดูรายการ
+            </button>
+          </div>
+        </section>
+
+        {pendingHandoverOpen ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-surface p-6 shadow-xl">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-bold text-foreground">
+                    รายการรอรับเข้าคลัง
+                  </h2>
+                  <p className="mt-1 text-sm text-text-secondary">
+                    เลือกรายการที่มีการนำสิ่งของมาส่งให้เจ้าหน้าที่
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPendingHandoverOpen(false)
+                  }
+                  className="rounded-lg bg-surface-muted px-3 py-2 text-sm font-semibold text-foreground"
+                >
+                  ปิด
+                </button>
+              </div>
+
+              {pendingHandoverError ? (
+                <p
+                  role="alert"
+                  className="mt-4 text-sm text-danger"
+                >
+                  {pendingHandoverError}
+                </p>
+              ) : null}
+
+              {pendingHandoverSuccess ? (
+                <p className="mt-4 text-sm font-medium text-green-700">
+                  {pendingHandoverSuccess}
+                </p>
+              ) : null}
+
+              {invalidPendingHandoverCount > 0 ? (
+                <div className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                  ข้อมูลรายการรอรับบางรายการยังไม่พร้อม
+                  กรุณาลองใหม่อีกครั้งภายหลัง
+                </div>
+              ) : null}
+
+              {pendingHandoverLoading ? (
+                <div className="mt-5 rounded-xl bg-surface-muted px-4 py-8 text-center text-sm text-text-secondary">
+                  กำลังโหลดรายการ...
+                </div>
+              ) : validPendingHandoverItems.length === 0 ? (
+                <div className="mt-5 rounded-xl bg-surface-muted px-4 py-8 text-center text-sm text-text-secondary">
+                  ไม่มีรายการรอรับเข้าคลัง
+                </div>
+              ) : (
+                <div className="mt-5 space-y-3">
+                  {validPendingHandoverItems.map(
+                    (item) => {
+                      const thumbnail =
+                        item.imageUrl[0]
+                          ? getImageUrl(
+                              item.imageUrl[0],
+                            )
+                          : null;
+
+                      const submitting =
+                        handoverSubmittingId ===
+                        item.transactionItemId;
+
+                      return (
+                        <article
+                          key={
+                            item.transactionItemId
+                          }
+                          className="flex flex-col gap-4 rounded-xl border border-border p-4 sm:flex-row sm:items-center"
+                        >
+                          <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-muted">
+                            {thumbnail ? (
+                              <Image
+                                src={thumbnail}
+                                alt={
+                                  item.transactionItemsName
+                                }
+                                width={80}
+                                height={80}
+                                className="size-16 object-cover"
+                              />
+                            ) : (
+                              <Warehouse className="size-5 text-text-secondary/50" />
+                            )}
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-foreground">
+                              {
+                                item.transactionItemsName
+                              }
+                            </p>
+                            <p className="mt-1 text-xs text-text-secondary">
+                              {item.transactionItemReferenceTag ??
+                                "ไม่มีรหัสอ้างอิง"}
+                            </p>
+                            <p className="mt-1 text-xs text-text-secondary">
+                              ผู้นำมาส่ง:{" "}
+                              {item.users?.userName ??
+                                "ไม่ระบุ"}
+                            </p>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              void handleHandover(
+                                item,
+                              )
+                            }
+                            disabled={submitting}
+                            className="h-10 shrink-0 rounded-lg bg-brand-purple px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {submitting
+                              ? "กำลังรับ..."
+                              : "รับเข้าคลัง"}
+                          </button>
+                        </article>
+                      );
+                    },
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : null}
 
         <section className="mt-7 grid gap-6 xl:grid-cols-2">
           {/* Check-in */}

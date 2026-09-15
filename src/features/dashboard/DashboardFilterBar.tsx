@@ -3,15 +3,17 @@ import { Search } from "lucide-react";
 
 export interface DashboardFilterBarProps {
   defaultQuery?: string;
+  actionPath?: string;
 }
 
 export function DashboardFilterBar({
   defaultQuery = "",
+  actionPath = "/dashboard",
 }: DashboardFilterBarProps) {
   return (
     <section className="mt-6 rounded-2xl bg-surface p-5">
       <form
-        action="/dashboard"
+        action={actionPath}
         method="get"
         className="flex flex-col gap-4 xl:flex-row xl:items-center"
       >
@@ -40,7 +42,7 @@ export function DashboardFilterBar({
 
         <div className="flex flex-wrap gap-2">
           <Link
-            href="/dashboard"
+            href={actionPath}
             className="rounded-lg bg-brand-purple px-4 py-2.5 text-sm font-medium text-white"
           >
             ทั้งหมด

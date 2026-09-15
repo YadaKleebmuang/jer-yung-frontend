@@ -10,6 +10,7 @@ import { type TransactionItemListItem } from "@/types/transaction-item";
 
 export interface LatestItemCardProps {
   item: TransactionItemListItem;
+  basePath?: string;
 }
 
 function formatItemDate(value: string) {
@@ -36,6 +37,7 @@ function getItemImageUrl(
 
 export function LatestItemCard({
   item,
+  basePath = "/items",
 }: LatestItemCardProps) {
   const isLost =
     item.transactionItemsPostType === "LOST";
@@ -53,7 +55,7 @@ export function LatestItemCard({
 
   return (
     <Link
-      href={`/items/${item.transactionItemId}`}
+      href={`${basePath}/${item.transactionItemId}`}
       className="group block overflow-hidden rounded-xl border border-border bg-surface transition hover:-translate-y-0.5 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-purple"
     >
       <div className="relative flex aspect-[5/3] items-center justify-center overflow-hidden bg-surface-muted">

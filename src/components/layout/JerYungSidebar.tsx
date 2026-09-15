@@ -60,7 +60,10 @@ export function JerYungSidebar({
         className,
       )}
     >
-      <Brand className="mb-8 px-2" />
+      <Brand
+        className="mb-8 px-2"
+        href={items[0]?.href || "/dashboard"}
+      />
 
       <SidebarNav items={items} />
 

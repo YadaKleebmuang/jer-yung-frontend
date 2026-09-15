@@ -12,11 +12,13 @@ type LatestItemsTab = "lost" | "found";
 export interface LatestItemsTabsProps {
   lostItems: TransactionItemListItem[];
   foundItems: TransactionItemListItem[];
+  basePath?: string;
 }
 
 export function LatestItemsTabs({
   lostItems,
   foundItems,
+  basePath = "/items",
 }: LatestItemsTabsProps) {
   const [activeTab, setActiveTab] =
     useState<LatestItemsTab>("lost");
@@ -75,6 +77,7 @@ export function LatestItemsTabs({
             <LatestItemCard
               key={item.transactionItemId}
               item={item}
+              basePath={basePath}
             />
           ))}
         </div>
@@ -84,8 +87,8 @@ export function LatestItemsTabs({
         <Link
           href={
             activeTab === "lost"
-              ? "/items?type=LOST"
-              : "/items?type=FOUND"
+              ? `${basePath}?type=LOST`
+              : `${basePath}?type=FOUND`
           }
           className="text-sm font-semibold text-brand-purple"
         >

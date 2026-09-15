@@ -2,7 +2,7 @@ import { ItemsListView } from "@/features/items/ItemsListView";
 
 export const dynamic = "force-dynamic";
 
-export interface ItemsPageProps {
+export interface AdminItemsPageProps {
   searchParams: Promise<{
     type?: string;
     q?: string;
@@ -10,15 +10,15 @@ export interface ItemsPageProps {
   }>;
 }
 
-export default async function ItemsPage({
+export default async function AdminItemsPage({
   searchParams,
-}: ItemsPageProps) {
+}: AdminItemsPageProps) {
   const params = await searchParams;
 
   return (
     <ItemsListView
       searchParams={params}
-      basePath="/items"
+      basePath="/admin/items"
     />
   );
 }
